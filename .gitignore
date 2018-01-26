@@ -98,7 +98,7 @@ ENV/
 /site
 
 # api
-/api
+api.py
 
 # mypy
 .mypy_cache/
