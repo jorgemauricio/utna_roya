@@ -38,20 +38,22 @@ def desc_info(fehca):
 	ftp = FTP(cve.ip); #Nombre del servidor
 	ftp.login(user=cve.usr, passwd=cve.pwd) #Usuario y contrasena del servidor
 	ftp.cwd('{}'.format(fecha)) #Infresa a una carpeta dentro del servidor
-	if os.path.exists('datos'):
-		os.chdir('datos')
-		os.mkdir('{}'.format(fecha))
+	if os.path.exists('datos'): #Verifica si la darpeta datos existe (donde se almacenaran los documentos a descargar)
+		os.chdir('datos') #Accede a la carpeta datos
 	else:
-		os.makedirs('datos/{}'.format(fecha))
-		os.chdir('datos')
-	
-	for i in range(1, 6): #Ciclo utilizaro para imprimir los 5 archivos que son los pronosticos (dia actual mas 4 subsecuentes)
-	    ftp.retrbinary('RETR d{}.txt'.format(i),open('{}/d{}.txt'.format(fecha, i),'wb').write) #Descarga los documentos asignandoles
+		os.mkdir('datos') #Crea la carpeta datos 
+		os.chdir('datos') #Accede a la carpeta datos
+	if os.path.exists('{}'.format(fecha)): 
+		for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor 1
+		    ftp.retrbinary('RETR d{}.txt'.format(i),open('{}/d{}.txt'.format(fecha, i),'wb').write) #Descarga los documentos
+	else:
+		os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
+		for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor 1
+		    ftp.retrbinary('RETR d{}.txt'.format(i),open('{}/d{}.txt'.format(fecha, i),'wb').write) #Descarga los documentos
 	ftp.quit()
-
-	os.chdir('..')
+	os.chdir('..') #Sale de la carpeta datos al directorio raiz
 
 cve = claves()
 fecha = obt_url(cve.url)
-#print (cinco_dias(fecha))
+print (cinco_dias(fecha))
 desc_info(fecha)
