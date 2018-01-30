@@ -35,13 +35,23 @@ def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
     return dias
 
 def desc_info(fehca):
-	ftp = FTP(ip); #Nombre del servidor
-	ftp.login(user=usr, passwd=pwd) #Usuario y contrasena del servidor
+	ftp = FTP(cve.ip); #Nombre del servidor
+	ftp.login(user=cve.usr, passwd=cve.pwd) #Usuario y contrasena del servidor
 	ftp.cwd('{}'.format(fecha)) #Infresa a una carpeta dentro del servidor
+	if os.path.exists('datos'):
+		os.chdir('datos')
+		os.mkdir('{}'.format(fecha))
+	else:
+		os.makedirs('datos/{}'.format(fecha))
+		os.chdir('datos')
+	
 	for i in range(1, 6): #Ciclo utilizaro para imprimir los 5 archivos que son los pronosticos (dia actual mas 4 subsecuentes)
-	    ftp.retrbinary('RETR d{}.txt'.format(i),open('{}-d{}.txt'.format(fecha, i),'wb').write) #Descarga los documentos asignandoles
-	ftp.quit() 
+	    ftp.retrbinary('RETR d{}.txt'.format(i),open('{}/d{}.txt'.format(fecha, i),'wb').write) #Descarga los documentos asignandoles
+	ftp.quit()
+
+	os.chdir('..')
 
 cve = claves()
 fecha = obt_url(cve.url)
-print (cinco_dias(fecha))
+#print (cinco_dias(fecha))
+desc_info(fecha)
