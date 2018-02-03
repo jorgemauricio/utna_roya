@@ -4,18 +4,24 @@ import os #Libreria utilizada para crear carpetas de almacenamiento
 import requests #Libreria utilizada para obtener el url
 import sys #Libreria utilizada para obtener el codigo obtenido
 
+def main():
+    cve = claves()
+    fecha = obt_fecha(cve)
+    print (fecha)
+    print (cinco_dias(fecha))
+    desc_docs(fecha,cve)
 
-def obt_fecha(ip): #Obtener la fecha actual
-    ftp = FTP(ip) #Nombre del servidor
+def obt_fecha(cve): #Obtener la fecha actual
+    ftp = FTP(cve.ip) #Nombre del servidor
     ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
-    fecha = [] 
+    fecha = []
     ftp.dir(fecha.append) #Se almacena toda la informacion que se encuentra en el directorio actual dentro del arreglo
     fecha = fecha[-1].split()[-1] #Se toma el ultimo valor del arreglo, se separa la cadena en un arreglo dividido por espacios y se toma el ultimo valor.
     return fecha # Se devuelve el valor obtenido
 
 def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
-    ano, mes, dia = (int(n) for n in fecha.split("-")) #Almacenamos cada dato correspondiente dividiendolo por un (-) 
-    if mes in (1, 3, 5, 7, 8, 10, 12): #Validacion de fecha 
+    ano, mes, dia = (int(n) for n in fecha.split("-")) #Almacenamos cada dato correspondiente dividiendolo por un (-)
+    if mes in (1, 3, 5, 7, 8, 10, 12): #Validacion de fecha
         dias_mes = 31
     elif mes == 2:
         if ano % 4 == 0 and (ano % 100 != 0 or ano % 400 == 0): #Si el mes se visiesto
@@ -24,7 +30,7 @@ def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
             dias_mes = 28
     elif mes in (4, 6, 9, 11):
         dias_mes = 30
-    dias = [] 
+    dias = []
     for n in range(0, 5): #Ciclo utilizado para almacenar los 5 dias
         if dia + n <= dias_mes:
             dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes, dia + n)) #'{:04d}-{:02d}-{:02d}' - Formato para la fecha
@@ -35,14 +41,14 @@ def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
                 dias.append('{:04d}-01-{:02d}'.format(ano + 1, n - (dias_mes - dia)))
     return dias
 
-def desc_docs(fehca): #Descargar los documentos de la carpeta con el nombre de la fecha actual
+def desc_docs(fecha,cve): #Descargar los documentos de la carpeta con el nombre de la fecha actual
     ftp = FTP(cve.ip); #Nombre del servidor
     ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
     ftp.cwd('{}'.format(fecha)) #Infresa a una carpeta dentro del servidor
     if os.path.exists('datos'): #Verifica si la carpeta datos existe (donde se almacenaran los documentos a descargar)
         os.chdir('datos') #Accede a la carpeta datos
     else:
-        os.mkdir('datos') #Crea la carpeta datos 
+        os.mkdir('datos') #Crea la carpeta datos
         os.chdir('datos') #Accede a la carpeta datos
     if os.path.exists('{}'.format(fecha)): #Verificar si la carpeta fecha existe que es donde se almacenaran los datos
         os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
@@ -56,8 +62,5 @@ def desc_docs(fehca): #Descargar los documentos de la carpeta con el nombre de l
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
-cve = claves()
-fecha = obt_fecha(cve.ip)
-print (fecha)
-print (cinco_dias(fecha))
-desc_docs(fecha)
+if __name__=="__main__":
+    main()
