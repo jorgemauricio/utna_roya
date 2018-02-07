@@ -1,15 +1,14 @@
 from api import claves
 from ftplib import FTP #Libreria utilizada para conectarse a un servidor FTP y obtener informacion
 import os #Libreria utilizada para crear carpetas de almacenamiento
-import requests #Libreria utilizada para obtener el url
-import sys #Libreria utilizada para obtener el codigo obtenido
+import pandas as pd
 
 def main():
     cve = claves()
     fecha = obt_fecha(cve)
-    print (fecha)
-    print (cinco_dias(fecha))
-    desc_docs(fecha,cve)
+    cinco_dias(fecha)
+    #desc_docs(fecha,cve)
+    crear_bd(fecha)
 
 def obt_fecha(cve): #Obtener la fecha actual
     ftp = FTP(cve.ip) #Nombre del servidor
@@ -17,6 +16,7 @@ def obt_fecha(cve): #Obtener la fecha actual
     fecha = []
     ftp.dir(fecha.append) #Se almacena toda la informacion que se encuentra en el directorio actual dentro del arreglo
     fecha = fecha[-1].split()[-1] #Se toma el ultimo valor del arreglo, se separa la cadena en un arreglo dividido por espacios y se toma el ultimo valor.
+    print ('Conexion realizada y fecha obtenida "{}"'.format(fecha))
     return fecha # Se devuelve el valor obtenido
 
 def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
@@ -41,7 +41,7 @@ def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
                 dias.append('{:04d}-01-{:02d}'.format(ano + 1, n - (dias_mes - dia)))
     return dias
 
-def desc_docs(fecha,cve): #Descargar los documentos de la carpeta con el nombre de la fecha actual
+def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre de la fecha actual
     ftp = FTP(cve.ip); #Nombre del servidor
     ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
     ftp.cwd('{}'.format(fecha)) #Infresa a una carpeta dentro del servidor
@@ -52,15 +52,24 @@ def desc_docs(fecha,cve): #Descargar los documentos de la carpeta con el nombre 
         os.chdir('datos') #Accede a la carpeta datos
     if os.path.exists('{}'.format(fecha)): #Verificar si la carpeta fecha existe que es donde se almacenaran los datos
         os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
-        for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor 1
-            ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
     else:
         os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
         os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
-        for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor 1
-            ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
+    for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor en 1
+        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
+        print ('Descargando archivo d{}.txt, de la fecha {} ...'.format(i, fecha))
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
+
+def crear_bd (fecha):
+    if os.path.exists('bases_datos'):
+        os.chdir('bases_datos')
+    else:
+        os.mkdir('bases_datos')
+        os.chdir('bases_datos')
+    os.chdir('../datos/{}'.format(fecha))
+    for i in range (1, 6):
+        datos = open ('d{}.txt'.format(i))
 
 if __name__=="__main__":
     main()
