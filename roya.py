@@ -82,6 +82,9 @@ class DescargarArchivos(Login):
 class ProcesadoInformacion():
 	pass
 
+class Mapas():
+	pass
+	
 if __name__ == "__main__":
 	fecha = Fecha().obtencionFecha()
 	FehasArreglo = ArregloFecha().fechas(fecha)
