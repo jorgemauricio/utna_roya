@@ -6,18 +6,23 @@ import pandas as pd
 def main():
     cve = claves()
     fecha = obt_fecha(cve)
-    cinco_dias(fecha)
+    #cinco_dias(fecha)
     #desc_docs(fecha,cve)
     crear_bd(fecha)
+    
 
 def obt_fecha(cve): #Obtener la fecha actual
-    ftp = FTP(cve.ip) #Nombre del servidor
-    ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
     fecha = []
-    ftp.dir(fecha.append) #Se almacena toda la informacion que se encuentra en el directorio actual dentro del arreglo
-    fecha = fecha[-1].split()[-1] #Se toma el ultimo valor del arreglo, se separa la cadena en un arreglo dividido por espacios y se toma el ultimo valor.
-    print ('Conexion realizada y fecha obtenida "{}"'.format(fecha))
-    return fecha # Se devuelve el valor obtenido
+    try:
+        ftp = FTP(cve.ip) #Nombre del servidor
+        ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
+        ftp.dir(fecha.append) #Se almacena toda la informacion que se encuentra en el directorio actual dentro del arreglo
+        fecha = fecha[-1].split()[-1] #Se toma el ultimo valor del arreglo, se separa la cadena en un arreglo dividido por espacios y se toma el ultimo valor.
+        print ('Conexion realizada y fecha obtenida "{}"'.format(fecha))
+        return fecha # Se devuelve el valor obtenido
+    except ValueError:
+        print ('Error de conexion')
+        return fecha
 
 def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
     ano, mes, dia = (int(n) for n in fecha.split("-")) #Almacenamos cada dato correspondiente dividiendolo por un (-)
@@ -56,8 +61,8 @@ def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre
         os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
         os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor en 1
-        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
         print ('Descargando archivo d{}.txt, de la fecha {} ...'.format(i, fecha))
+        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
@@ -68,8 +73,16 @@ def crear_bd (fecha):
         os.mkdir('bases_datos')
         os.chdir('bases_datos')
     os.chdir('../datos/{}'.format(fecha))
-    for i in range (1, 6):
-        datos = open ('d{}.txt'.format(i))
+    datos = pd.read_csv('d1.txt')
+    Tmax = datos['Tmax']
+    Tmin = datos['Tmin']
+    Noch_fres = Tmax - Tmin
+    print (Tmax[:5])
+    print (Tmin[:5])
+    print (Noch_fres[:5])
+    d = open('Tpro1.txt','wb')
+    d.write(Noch_fres)
+    d.close()
 
 if __name__=="__main__":
     main()
