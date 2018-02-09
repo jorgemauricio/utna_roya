@@ -2,6 +2,7 @@ from api import claves
 from ftplib import FTP #Libreria utilizada para conectarse a un servidor FTP y obtener informacion
 import os #Libreria utilizada para crear carpetas de almacenamiento
 import pandas as pd
+import sqlite3
 
 def main():
     cve = claves()
@@ -73,16 +74,23 @@ def crear_bd (fecha):
         os.mkdir('bases_datos')
         os.chdir('bases_datos')
     os.chdir('../datos/{}'.format(fecha))
-    datos = pd.read_csv('d1.txt')
+    '''datos = pd.read_csv('d1.txt')
+    datos = datos.loc[datos['TprSoil10_40']<=99]
     Tmax = datos['Tmax']
     Tmin = datos['Tmin']
+    Tpro = datos['Tpro']    
+    Dpoint = datos['Dpoint']
     Noch_fres = Tmax - Tmin
-    print (Tmax[:5])
-    print (Tmin[:5])
-    print (Noch_fres[:5])
-    d = open('Tpro1.txt','wb')
-    d.write(Noch_fres)
-    d.close()
+    '''
+    os.chdir('../../bases_datos')
+    conex = sqlite3.connect('Variables_{}.db'.format(fecha))
+    cursor = conex.cursor()
+    cursor.execute("""CREATE TABLE VARIABLES(Noch_fres TEXT, Tpro TEXT, Dpoint TEXT)""")
+    cursor.execute("""INSERT INTO VARIABLES(Noch_fres, Tpro, Dpoint) VALUES('X', 'X', 'XD')""")
+    conex.commit()   
+    conex.close()
+    datos = pd.read_csv('Variables_{}.db'.format(fecha))
+    print (datos)
 
 if __name__=="__main__":
     main()
