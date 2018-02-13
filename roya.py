@@ -2,15 +2,18 @@ from api import claves
 from ftplib import FTP #Libreria utilizada para conectarse a un servidor FTP y obtener informacion
 import os #Libreria utilizada para crear carpetas de almacenamiento
 import pandas as pd
-import sqlite3
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
+import shapefile
 
 def main():
+    fecha = '2018-02-09'
     cve = claves()
     fecha = obt_fecha(cve)
-    #cinco_dias(fecha)
-    #desc_docs(fecha,cve)
-    crear_bd(fecha)
-    
+    cinco_dias(fecha)
+    desc_docs(fecha,cve)
+        
 
 def obt_fecha(cve): #Obtener la fecha actual
     fecha = []
@@ -67,30 +70,33 @@ def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
-def crear_bd (fecha):
-    if os.path.exists('bases_datos'):
-        os.chdir('bases_datos')
+def crear_mapas (fecha):
+    if os.path.exists('mapas'):
+        os.chdir('mapas')
     else:
-        os.mkdir('bases_datos')
-        os.chdir('bases_datos')
-    os.chdir('../datos/{}'.format(fecha))
-    '''datos = pd.read_csv('d1.txt')
-    datos = datos.loc[datos['TprSoil10_40']<=99]
-    Tmax = datos['Tmax']
-    Tmin = datos['Tmin']
-    Tpro = datos['Tpro']    
-    Dpoint = datos['Dpoint']
-    Noch_fres = Tmax - Tmin
-    '''
-    os.chdir('../../bases_datos')
-    conex = sqlite3.connect('Variables_{}.db'.format(fecha))
-    cursor = conex.cursor()
-    cursor.execute("""CREATE TABLE VARIABLES(Noch_fres TEXT, Tpro TEXT, Dpoint TEXT)""")
-    cursor.execute("""INSERT INTO VARIABLES(Noch_fres, Tpro, Dpoint) VALUES('X', 'X', 'XD')""")
-    conex.commit()   
-    conex.close()
-    datos = pd.read_csv('Variables_{}.db'.format(fecha))
-    print (datos)
+        os.mkdir('mapas')
+        os.chdir('mapas')
+    os.chdir('..')
+    datos = pd.read_csv('datos/{}}/d1.txt'.format(fecha))
+    Tierra = datos.loc[datos['WprSoil10_40'] <= 99]
+    T_pro = Tierra.loc[Tierra['Tpro'] >=25]
+    T_pro = T_pro.loc[T_pro['Tpro'] <=30]
+    Eje_x = np.array(T_pro['Long'])
+    Eje_y = np.array(T_pro['Lat'])
+    Long= np.array(datos['Long'])
+    Long_min=Long.min()
+    Long_max=Long.max()
+    Lat= np.array(datos['Lat'])
+    Lat_min=Lat.min()
+    Lat_max=Lat.max() 
+    map = Basemap(projection='mill',
+              resolution='c',
+              llcrnrlon=Long.min(), llcrnrlat=Lat.min(),
+              urcrnrlon=Long.max(), urcrnrlat=Lat.max())
+    x, y = map(Eje_x, Eje_y)
+    map.scatter(x, y, marker='.',color='#0000FF')
+    map.readshapefile("shapes/Estados", 'Mill')
+
 
 if __name__=="__main__":
     main()
