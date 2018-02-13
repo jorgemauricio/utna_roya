@@ -11,8 +11,9 @@ def main():
     fecha = '2018-02-09'
     cve = claves()
     fecha = obt_fecha(cve)
-    cinco_dias(fecha)
-    desc_docs(fecha,cve)
+    #cinco_dias(fecha)
+    #desc_docs(fecha,cve)
+    crear_mapas(fecha)
         
 
 def obt_fecha(cve): #Obtener la fecha actual
@@ -71,31 +72,43 @@ def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
 def crear_mapas (fecha):
-    if os.path.exists('mapas'):
-        os.chdir('mapas')
-    else:
-        os.mkdir('mapas')
-        os.chdir('mapas')
-    os.chdir('..')
-    datos = pd.read_csv('datos/{}}/d1.txt'.format(fecha))
-    Tierra = datos.loc[datos['WprSoil10_40'] <= 99]
-    T_pro = Tierra.loc[Tierra['Tpro'] >=25]
-    T_pro = T_pro.loc[T_pro['Tpro'] <=30]
-    Eje_x = np.array(T_pro['Long'])
-    Eje_y = np.array(T_pro['Lat'])
-    Long= np.array(datos['Long'])
-    Long_min=Long.min()
-    Long_max=Long.max()
-    Lat= np.array(datos['Lat'])
-    Lat_min=Lat.min()
-    Lat_max=Lat.max() 
-    map = Basemap(projection='mill',
-              resolution='c',
-              llcrnrlon=Long.min(), llcrnrlat=Lat.min(),
-              urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-    x, y = map(Eje_x, Eje_y)
-    map.scatter(x, y, marker='.',color='#0000FF')
-    map.readshapefile("shapes/Estados", 'Mill')
+    variables = ['Tpro','Dpoint','Noch_fres']
+    for i in variables:
+        datos = pd.read_csv('datos/{}/d1.txt'.format(fecha))
+        x = 'Long'
+        y = 'Lat'
+        Tierra = datos.loc[datos['WprSoil10_40'] <= 99]
+        Long= np.array(datos['{}'.format(x)])
+        Long_min=Long.min()
+        Long_max=Long.max()
+        Lat= np.array(datos['{}'.format(y)])
+        Lat_min=Lat.min()
+        Lat_max=Lat.max() 
+        if i == 'Tpro':
+            Var = Tierra.loc[Tierra['{}'.format(i)] >=25]
+            Var = Var.loc[Var['{}'.format(i)] <=30]
+        elif i == 'Dpoint':
+            Var = Tierra.loc[Tierra['{}'.format(i)] >5]
+        elif i == 'Noch_fres':
+            Var = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) >=15]
+            Var = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) <=20]
+        
+        Eje_x = np.array(Var['{}'.format(x)])
+        Eje_y = np.array(Var['{}'.format(y)])
+                
+        map = Basemap(projection='mill',
+                  resolution='c',
+                  llcrnrlon=Long.min(), llcrnrlat=Lat.min(),
+                  urcrnrlon=Long.max(), urcrnrlat=Lat.max())
+        #map.drawcountries(color="green")
+        #map.fillcontinents(color='#c8dfb0', lake_color='#53BEFD')
+        #map.drawmapboundary(color='black', linewidth=0.5, fill_color='#53BEFD')
+
+        x, y = map(Eje_x, Eje_y)
+        map.scatter(x, y, marker='.',color='#0000FF')
+        map.readshapefile("shapes/Estados", 'Mill')
+        plt.savefig("mapas/{}_{}_d1.png".format(fecha, i))
+        print ('Generando Mapa "{}_{}_d1.png"'.format(fecha, i))
 
 
 if __name__=="__main__":
