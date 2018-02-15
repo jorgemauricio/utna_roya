@@ -103,11 +103,17 @@ ENV/
 #mapas
 /mapas
 
-# bases_datos
-/bases_datos
+#shapes
+/shapes
 
 # api
 api.py
 
 # mypy
 .mypy_cache/
+
+#Untitled.ipynb
+Untitled.ipynb
+
+#.ipynb_checkpoints
+/.ipynb_checkpoints
