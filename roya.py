@@ -8,11 +8,11 @@ from mpl_toolkits.basemap import Basemap
 import shapefile
 
 def main():
-    fecha = '2018-02-14'
+    #fecha = '2018-02-14'
     cve = claves()
-    #fecha = obt_fecha(cve)
-    #cinco_dias(fecha)
-    #desc_docs(fecha,cve)
+    fecha = obt_fecha(cve)
+    cinco_dias(fecha)
+    desc_docs(fecha,cve)
     crear_mapas(fecha)
         
 def obt_fecha(cve): #Obtener la fecha actual
