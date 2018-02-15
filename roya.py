@@ -8,13 +8,13 @@ from mpl_toolkits.basemap import Basemap
 import shapefile
 
 def main():
-    fecha = '2018-02-14'
+    #fecha = '2018-02-14'
     cve = claves()
-    #fecha = obt_fecha(cve)
-    #cinco_dias(fecha)
-    #desc_docs(fecha,cve)
-    crear_mapas(fecha)
-        
+    fecha = obt_fecha(cve)
+    cincodias = cinco_dias(fecha)
+    desc_docs(fecha,cve)
+    crear_mapas(fecha, cincodias)
+
 def obt_fecha(cve): #Obtener la fecha actual
     fecha = []
     try:
@@ -70,7 +70,7 @@ def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
-def crear_mapas (fecha):
+def crear_mapas (fecha, cincodias):
     if os.path.exists('mapas'): #Verifica si la carpeta datos existe (donde se almacenaran los documentos a descargar)
         os.chdir('mapas') #Accede a la carpeta datos
     else:
@@ -83,8 +83,8 @@ def crear_mapas (fecha):
         os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     os.chdir('../..')
     df = pd.DataFrame()
-    for i in range (1, 6):
-        datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i))
+    for i in range (0,5):
+        datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i +1))
         x = 'Long'
         y = 'Lat'
         Long= np.array(datos['{}'.format(x)])
@@ -105,9 +105,9 @@ def crear_mapas (fecha):
         x, y = map(Eje_x, Eje_y)
         map.scatter(x, y, marker='.',color='#0000FF')
         map.readshapefile("shapes/Estados", 'Mill')
-        print ('Generando Mapa "Pronostico de Roya - {} - d{}.png" ...'.format(fecha, i))
-        plt.title('Pronostico de Roya \n {} - d{}'.format(fecha, i))
-        plt.savefig("mapas/{}/Pronostico de Roya - {} - d{}.png".format(fecha, fecha, i))
+        print ('Generando Mapa "Pronostico de Roya - {}.png" ...'.format(cincodias[i]))
+        plt.title('Pronostico de Roya \n {}'.format(cincodias[i]))
+        plt.savefig("mapas/{}/Pronostico de Roya - {}.png".format(fecha, cincodias[i]))
 
 if __name__=="__main__":
     main()
