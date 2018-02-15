@@ -8,14 +8,13 @@ from mpl_toolkits.basemap import Basemap
 import shapefile
 
 def main():
-    fecha = '2018-02-09'
+    fecha = '2018-02-14'
     cve = claves()
-    fecha = obt_fecha(cve)
+    #fecha = obt_fecha(cve)
     #cinco_dias(fecha)
     #desc_docs(fecha,cve)
     crear_mapas(fecha)
         
-
 def obt_fecha(cve): #Obtener la fecha actual
     fecha = []
     try:
@@ -72,9 +71,19 @@ def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
 def crear_mapas (fecha):
+    if os.path.exists('mapas'): #Verifica si la carpeta datos existe (donde se almacenaran los documentos a descargar)
+        os.chdir('mapas') #Accede a la carpeta datos
+    else:
+        os.mkdir('mapas') #Crea la carpeta datos
+        os.chdir('mapas') #Accede a la carpeta datos
+    if os.path.exists('{}'.format(fecha)): #Verificar si la carpeta fecha existe que es donde se almacenaran los datos
+        os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
+    else:
+        os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
+        os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     variables = ['Tpro','Dpoint','Noch_fres']
     for i in variables:
-        datos = pd.read_csv('datos/{}/d1.txt'.format(fecha))
+        datos = pd.read_csv('../../datos/{}/d1.txt'.format(fecha))
         x = 'Long'
         y = 'Lat'
         Tierra = datos.loc[datos['WprSoil10_40'] <= 99]
@@ -91,25 +100,20 @@ def crear_mapas (fecha):
             Var = Tierra.loc[Tierra['{}'.format(i)] >5]
         elif i == 'Noch_fres':
             Var = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) >=15]
-            Var = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) <=20]
-        
+            Var = Var.loc[(Var['Tmax'] - Var['Tmin']) <=20]
         Eje_x = np.array(Var['{}'.format(x)])
-        Eje_y = np.array(Var['{}'.format(y)])
-                
-        map = Basemap(projection='mill',
-                  resolution='c',
-                  llcrnrlon=Long.min(), llcrnrlat=Lat.min(),
-                  urcrnrlon=Long.max(), urcrnrlat=Lat.max())
+        Eje_y = np.array(Var['{}'.format(y)])     
+        map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
         #map.drawcountries(color="green")
         #map.fillcontinents(color='#c8dfb0', lake_color='#53BEFD')
         #map.drawmapboundary(color='black', linewidth=0.5, fill_color='#53BEFD')
-
         x, y = map(Eje_x, Eje_y)
         map.scatter(x, y, marker='.',color='#0000FF')
-        map.readshapefile("shapes/Estados", 'Mill')
-        plt.savefig("mapas/{}_{}_d1.png".format(fecha, i))
-        print ('Generando Mapa "{}_{}_d1.png"'.format(fecha, i))
-
+        map.readshapefile("../../shapes/Estados", 'Mill')
+        print ('Generando Mapa "{} - {} - d1.png" ...'.format(fecha, i))
+        plt.title('Pronostico de {} \n {}'.format(i, fecha))
+        plt.savefig("{} - {} - d1.png".format(fecha, i))
+    os.chdir('../..')
 
 if __name__=="__main__":
     main()
