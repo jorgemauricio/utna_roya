@@ -1,12 +1,17 @@
 from api import claves
-#import pandas as pd 
+import pandas as pd 
 import ftplib 
 import time 
 import sys
+import requests
 import os
+import shapefile 
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
 
-class Login():
-	'''Clase constructura.'''
+
+class Login(): # Contiene las clases constructuras.
 	def __init__(self):
 		self.clv = claves()
 		self.ftp = ftplib.FTP(self.clv.ip)
@@ -16,8 +21,7 @@ class Fecha(Login):
 	def __init__(self):
 		super().__init__()
 
-	def obtencionFecha(self):
-		'''Obtiene la fecha desde el FTP del Instituto'''
+	def obtencionFecha(self): #Obtiene la fecha desde el FTP del Instituto
 		try:
 			arregloFecha = []
 			self.ftp.dir(arregloFecha.append)
@@ -29,9 +33,7 @@ class Fecha(Login):
 			print('El servidor no a encontrado la fecha establecida')
 
 class ArregloFecha():
-	def fechas(self, fecha):
-		'''Genera un arreglo de 5 fechas subsecuentes 
-		a la fecha ingresada por parametro'''
+	def fechas(self, fecha): #Genera un arreglo de 5 fechas subsecuentes a la fecha ingresada por parametro
 		ano, mes, dia = (int(arreglo) for arreglo in fecha.split('-'))
 		if mes in (1 , 3, 5, 7, 8, 10, 12):
 			dias_mes = 31
@@ -57,9 +59,7 @@ class DescargarArchivos(Login):
 	def __init__(self):
 		super().__init__()
 
-	def descDocs(self, fecha):
-		'''Descargar los 5 archivos respectivo a la fecha
-		ingresada por parametro'''
+	def descDocs(self, fecha): #Descarga los 5 archivos respectivos a la fecha ingresada por parametro
 		self.ftp = ftplib.FTP(self.clv.ip)
 		self.ftp.login(self.clv.usr, self.clv.pwd)
 		self.ftp.cwd('{}'.format(fecha))
@@ -72,20 +72,64 @@ class DescargarArchivos(Login):
 			if os.path.exists('{}'.format(fecha)):
 				os.chdir('{}'.format(fecha))
 				for i in range(1, 6):
-					print("Archivo d{}.txt".format(i))
+					print("Descargando Archivo d{}.txt".format(i))
 					self.ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write)
 			else:
 				os.mkdir('{}'.format(fecha))
 				os.chdir('{}'.format(fecha))
 				for i in range(1, 6):
-					print("Archivo d{}.txt".format(i))
+					print("Descargando Archivo d{}.txt".format(i))
 					self.ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i), 'wb').write)
 			self.ftp.quit()
 			os.chdir('../..')
 		except ValueError:
-			print("No se a podido encontrar o crear la carpeta estbalecida")
+			print("No se a podido encontrar o crear la carpeta establecida")
+
+class GeneracionMapas():
+	def Crea_Map(fecha):	#Funcion para la realizacion de mapas
+		variables = ['Tpro','Dpoint', 'No_Fre']
+		for i in variables:
+			data = pd.read_csv('data/{}/d1.txt'.format(fecha))
+			x = 'Long'
+			y = 'Lat'
+			Suelo = data.loc[data['WprSoil10_40'] <=99]
+			Long = np.array(data['{}'.format(x)])
+			Long_min = Long.min()
+			Long_max = Long.max()
+			Lat = np.array(data['{}'.format(y)])
+			Lat_min = Lat.min()
+			Lat_max = Lat.max()
+			if i == 'Tpro':
+				Var = Suelo.loc[Suelo['{}'.format(i)] >=25]
+				Var = Var.loc[Suelo['{}'.format(i)] <=30]
+			elif i == 'Dpoint':
+				Var = Suelo.loc[Suelo['{}'.format(i)] >5]
+			elif i == 'No_Fre':
+				Var = Suelo.loc[(Suelo['Tmax'] - Suelo['Tmin']) >=15]
+				Var = Suelo.loc[(Suelo['Tmax'] - Suelo['Tmin']) <=20]
+
+			Eje_x = np.array(Var['{}'.format(x)])
+			Eje_y = np.array(Var['{}'.format(y)])
+
+			map = Basemap(projection = 'mill', 
+				   resolution = 'l',
+				   area_thresh = 0.01,
+				   llcrnrlon = Long.min(), llcrnrlat = Lat.min(), 
+				   urcrnrlon = Long.max(), urcrnrlat = Lat.max())
+	        #map.drawcountries(color="gray")
+			#map.fillcontinents(color='#CD5C5C', lake_color='#53BEFD')
+			#map.drawmapboundary(color='black', linewidth=0.5, fill_color='#008080')
+
+			x,y = map(Eje_x, Eje_y)
+			map.scatter(x,y, marker='.', color='k')
+			map.readshapefile("Estados", 'Mill')
+			plt.savefig("mapas/{}_{}_d1.png".format(fecha, i))
+			print ('Generando Mapa "{}_{}_d1.jpg"'.format(fecha, i))		
+
 	
 if __name__ == "__main__":
 	fecha = Fecha().obtencionFecha()
 	FehasArreglo = ArregloFecha().fechas(fecha)
 	DescargarArchivos().descDocs(fecha)
+	GeneracionMapas.Crea_Map(fecha)
+	
