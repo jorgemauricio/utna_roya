@@ -11,9 +11,9 @@ def main():
     #fecha = '2018-02-14'
     cve = claves()
     fecha = obt_fecha(cve)
-    cincodias = cinco_dias(fecha)
+    cinco_dias(fecha)
     desc_docs(fecha,cve)
-    crear_mapas(fecha, cincodias)
+    data_frame(fecha)
 
 def obt_fecha(cve): #Obtener la fecha actual
     fecha = []
@@ -70,44 +70,20 @@ def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
-def crear_mapas (fecha, cincodias):
-    if os.path.exists('mapas'): #Verifica si la carpeta datos existe (donde se almacenaran los documentos a descargar)
-        os.chdir('mapas') #Accede a la carpeta datos
-    else:
-        os.mkdir('mapas') #Crea la carpeta datos
-        os.chdir('mapas') #Accede a la carpeta datos
-    if os.path.exists('{}'.format(fecha)): #Verificar si la carpeta fecha existe que es donde se almacenaran los datos
-        os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
-    else:
-        os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
-        os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
-    os.chdir('../..')
+def data_frame(fecha):
     df = pd.DataFrame()
-    for i in range (0,5):
-        datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i +1))
-        x = 'Long'
-        y = 'Lat'
-        Long= np.array(datos['{}'.format(x)])
-        Long_min=Long.min()
-        Long_max=Long.max()
-        Lat= np.array(datos['{}'.format(y)])
-        Lat_min=Lat.min()
-        Lat_max=Lat.max() 
-        Tierra = datos.loc[datos['WprSoil10_40'] <= 99]
-        Tierra = Tierra.loc[Tierra['Tpro'] >=25]
-        Tierra = Tierra.loc[Tierra['Tpro'] <=30]
-        Tierra = Tierra.loc[Tierra['Dpoint'] >5]
-        Tierra = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) >=15]
-        Tierra = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) <=20]
-        Eje_x = np.array(Tierra['{}'.format(x)])
-        Eje_y = np.array(Tierra['{}'.format(y)])     
-        map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-        x, y = map(Eje_x, Eje_y)
-        map.scatter(x, y, marker='.',color='#0000FF')
-        map.readshapefile("shapes/Estados", 'Mill')
-        print ('Generando Mapa "Pronostico de Roya - {}.png" ...'.format(cincodias[i]))
-        plt.title('Pronostico de Roya \n {}'.format(cincodias[i]))
-        plt.savefig("mapas/{}/Pronostico de Roya - {}.png".format(fecha, cincodias[i]))
+    for i in range (1, 6):
+        datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i))
+        df['Tpro{}'.format(i)] = datos['Tpro'.format(i)]
+        df['Noch_fres{}'.format(i)] = (datos['Tmax'.format(i)] - datos['Tmin'.format(i)])
+        df['Dpoint{}'.format(i)] = datos['Dpoint'.format(i)]
+        Long = datos['Long']
+        Lat = datos['Lat']
+        WprSoil10_40 = datos['WprSoil10_40']
+    df['Long'] = Long
+    df['Lat'] = Lat
+    df['WprSoil10_40'] = WprSoil10_40
+    return df
 
 if __name__=="__main__":
     main()
