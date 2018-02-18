@@ -24,10 +24,13 @@ class Fecha(Login):
 		'''Obtiene la fecha desde el FTP del Instituto'''
 		arregloFecha = []
 		self.ftp.dir(arregloFecha.append)
-		arreglo = arregloFecha[-1].split()
-		for i in arreglo:
-			if i == time.strftime("%Y-%m-%d"):
-				return (i)
+		a = -1
+		while(True):
+			arreglo = arregloFecha[a].split()
+			for i in arreglo:
+				if i == time.strftime("%Y-%m-%d"):
+					return (i)
+			a -= 1
 
 class ArregloFecha():
 	def fechas(self, fecha):
@@ -83,45 +86,41 @@ class DescargarArchivos(Login):
 		self.ftp.quit()
 		os.chdir('../..')
 
-class CreacionMapas:
-	def Mapas(self, fecha):
-		'''La siguiente funcion procesara y filtrara la informacion para 
-		generar los respectivos mapas de los diferentes cambios climatologicos'''
+class DataFrame:
+	def BaseDataFrame(self, fecha):
+		'''Genera un DataFrame uniendo las variables (Tmax, Tmin, Tpro, Dpoint)
+		de los 5 archivos descargados desde el ftp'''
 		os.chdir('data/{}'.format(fecha))
-		VariablesClima = ('Tpro','Dpoint','Noch_fres')
-		for i in range(1, 3):
-			print('Procesando la informacion del Documento d{}.txt'.format(i))
-			data = pd.read_csv('d{}.txt'.format(i))
-			for j in range(len(VariablesClima)):
-				print('Procesando Mapa {} del {}'.format(VariablesClima[j], fecha))
-				Tierra = data.loc[data['WprSoil10_40'] <= 99]
-				x , y = 'Long', 'Lat' 
-				Long = np.array(data['{}'.format(x)])
-				Lat = np.array(data['{}'.format(y)])
-				if i == 0:
-					procesado = Tierra.loc[Tierra['{}'.format(VariablesClima[j])] >=25]
-					procesado = procesado.loc[procesado['{}'.format(VariablesClima[j] <= 30)]]
-				elif i == 1:
-					procesado = Tierra.loc[Tierra['{}'.format(VariablesClima[j])] > 5]
-				elif i == 2:
-					procesado = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) >=15]
-					procesado = Tierra.loc[(Tierra['Tmax'] - Tierra['Tmin']) <=20]
+		for i in range(1, 6):
+			data = pd.read_csv("d{}.txt".format(i))
+			if i == 1:
+				df = data[['Long','Lat',]]
+				df = (df.assign(Tmax1 = data['Tmax']))
+				df = (df.assign(Tmin1 = data['Tmin']))
+				df = (df.assign(Tpro1 = data['Tpro']))
+				df = (df.assign(Dpoint1 = data['Dpoint']))
+			elif i == 2:
+				df = (df.assign(Tmax2 = data['Tmax']))
+				df = (df.assign(Tmin2 = data['Tmin']))
+				df = (df.assign(Tpro2 = data['Tpro']))
+				df = (df.assign(Dpoint2 = data['Dpoint']))
+			elif i == 3:
+				df = (df.assign(Tmax3 = data['Tmax']))
+				df = (df.assign(Tmin3 = data['Tmin']))
+				df = (df.assign(Tpro3 = data['Tpro']))
+				df = (df.assign(Dpoint3 = data['Dpoint']))
+			elif i == 4:
+				df = (df.assign(Tmax4 = data['Tmax']))
+				df = (df.assign(Tmin4 = data['Tmin']))
+				df = (df.assign(Tpro4 = data['Tpro']))
+				df = (df.assign(Dpoint4 = data['Dpoint']))
+			elif i == 5:
+				df = (df.assign(Tmax5 = data['Tmax']))
+				df = (df.assign(Tmin5 = data['Tmin']))
+				df = (df.assign(Tpro5 = data['Tpro']))
+				df = (df.assign(Dpoint5 = data['Dpoint']))
+		return df
 
-				Eje_x = np.array(procesado['{}'.format(x)])
-				Eje_y = np.array(procesado['{}'.format(y)])
-
-				map = Basemap(projection='mill',
-								resolution='l',
-								area_thresh=0.01,
-								llcrnrlon=Long.min(), llcrnrlat=Lat.min(),
-								urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-				x1, x2 = map(Eje_x, Eje_y)
-				map.scatter(x1, x2, marker='.',color='#0000FF')
-				os.chdir('../..')
-				map.readshapefile('shapes/Estados','mill')
-				od.chdir('data/{}'.format(fecha))
-				plt.title('{} del {}'.format(VariablesClima[j], fecha))
-				plt.savefig('{} del {}.png'.format(VariablesClima[j],fecha))
 
 if __name__ == "__main__":
 	fecha = Fecha().obtencionFecha()
@@ -130,4 +129,5 @@ if __name__ == "__main__":
 	print('Espera algunos minutos para que el proceso llegue a finalizar...')
 	DescargarArchivos().descDocs(fecha)
 	print('------------------------------')
-	CreacionMapas().Mapas(fecha)
+	dataFrame = DataFrame().BaseDataFrame(fecha)
+	print(dataFrame.head(2))
