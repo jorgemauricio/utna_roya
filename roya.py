@@ -89,14 +89,18 @@ def data_frame(fecha):
     df['Long'] = Long
     df['Lat'] = Lat
     df['WprSoil10_40'] = WprSoil10_40
-    
+
     variables = ['Tpro','Dpoint','Noch_fres']
     for j in range (1,6):
         df['d{}'.format(j)] = df.apply(lambda x:roya(x['{}{}'.format(variables[0],j)],x['{}{}'.format(variables[1],j)],x['{}{}'.format(variables[2],j)]),axis=1)
     return df
 
 def mapas(df):
-    
+	"""
+	No se deben de dar solas las funciones al menos debes de agregar el comando pass
+	"""
+	pass
+
 
 if __name__=="__main__":
     main()
