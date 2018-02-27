@@ -13,7 +13,7 @@ def main():
     fecha = obt_fecha(cve)
     cinco_dias(fecha)
     desc_docs(fecha,cve)
-    data_frame(fecha)
+    df = data_frame(fecha)
 
 def obt_fecha(cve): #Obtener la fecha actual
     fecha = []
@@ -70,6 +70,12 @@ def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
+def roya(Tpro,Dpoint,Noch_fres):
+    if Tpro >= 25 and Tpro <=30 and Dpoint > 5 and Noch_fres >= 15 and Noch_fres <=20:
+        return 1
+    else:
+        return 0
+
 def data_frame(fecha):
     df = pd.DataFrame()
     for i in range (1, 6):
@@ -83,7 +89,14 @@ def data_frame(fecha):
     df['Long'] = Long
     df['Lat'] = Lat
     df['WprSoil10_40'] = WprSoil10_40
+    
+    variables = ['Tpro','Dpoint','Noch_fres']
+    for j in range (1,6):
+        df['d{}'.format(j)] = df.apply(lambda x:roya(x['{}{}'.format(variables[0],j)],x['{}{}'.format(variables[1],j)],x['{}{}'.format(variables[2],j)]),axis=1)
     return df
+
+def mapas(df):
+    
 
 if __name__=="__main__":
     main()
