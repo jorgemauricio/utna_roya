@@ -1,5 +1,5 @@
-from mpl_toolkits.basemap import Basemap
-import matplotlib.pyplot as plt
+#from mpl_toolkits.basemap import Basemap
+#import matplotlib.pyplot as plt
 from api import claves
 import pandas as pd 
 import numpy as np
@@ -8,6 +8,7 @@ import ftplib
 import time
 import sys
 import os
+listaParametros = [25,30,5]
 
 class Login():
 	'''Clase constructura.'''
@@ -86,6 +87,47 @@ class DescargarArchivos(Login):
 		self.ftp.quit()
 		os.chdir('../..')
 
+class Menu:
+	'''Muestra un menu y responde a la eleccion seleccionada por el usuario'''
+	def __init__(self):
+		self.elecciones = {
+			"1": self.IngresarPara,
+			"2": self.Default,
+			"3": self.salir
+		}
+
+	def MostrarMenu(self):
+		'''Menu de la aplicacion ROYA'''
+		print("""\tMenu Roya
+1 Ingresar rangos a las variables de clima
+2 Enviar variables por default
+3 Cancelar y salir. """)
+
+	def run(self):
+		'''Muestra el menu y responde a la eleccion.'''
+		self.MostrarMenu()
+		eleccion = input("Selecciona la opcion: ")
+		accion = self.elecciones.get(eleccion)
+		if(accion):
+			accion()
+		else:
+			print("{} no es una eleccion valida".format(eleccion))
+
+	def IngresarPara(self):
+		TproMin = int(input("Temperatura promedio Minima: "))
+		TproMax = int(input("Temperatura promedio Maxima: "))
+		Dpoint = int(input("Dpoint: "))
+		listaParametros[0] = TproMin
+		listaParametros[1] = TproMax
+		listaParametros[2] = Dpoint
+
+	def Default(self):
+		pass
+
+	def salir(self):
+		print("Gracias por usar la aplicacion ROYA")
+		sys.exit(0)
+
 class DataFrame:
 	def BaseDataFrame(self, fecha):
 		'''Genera un DataFrame uniendo las variables (Tmax, Tmin, Tpro, Dpoint)
@@ -94,33 +136,23 @@ class DataFrame:
 		for i in range(1, 6):
 			data = pd.read_csv("d{}.txt".format(i))
 			if i == 1:
-				df = data[['Long','Lat',]]
-				df = (df.assign(Tmax1 = data['Tmax']))
-				df = (df.assign(Tmin1 = data['Tmin']))
-				df = (df.assign(Tpro1 = data['Tpro']))
-				df = (df.assign(Dpoint1 = data['Dpoint']))
-			elif i == 2:
-				df = (df.assign(Tmax2 = data['Tmax']))
-				df = (df.assign(Tmin2 = data['Tmin']))
-				df = (df.assign(Tpro2 = data['Tpro']))
-				df = (df.assign(Dpoint2 = data['Dpoint']))
-			elif i == 3:
-				df = (df.assign(Tmax3 = data['Tmax']))
-				df = (df.assign(Tmin3 = data['Tmin']))
-				df = (df.assign(Tpro3 = data['Tpro']))
-				df = (df.assign(Dpoint3 = data['Dpoint']))
-			elif i == 4:
-				df = (df.assign(Tmax4 = data['Tmax']))
-				df = (df.assign(Tmin4 = data['Tmin']))
-				df = (df.assign(Tpro4 = data['Tpro']))
-				df = (df.assign(Dpoint4 = data['Dpoint']))
-			elif i == 5:
-				df = (df.assign(Tmax5 = data['Tmax']))
-				df = (df.assign(Tmin5 = data['Tmin']))
-				df = (df.assign(Tpro5 = data['Tpro']))
-				df = (df.assign(Dpoint5 = data['Dpoint']))
-		return df
+				df = data[['Long','Lat','WprSoil10_40']]
+			if i > 0:
+				df['Tpro{}'.format(i)] = data['Tpro']
+				df['NocFres{}'.format(i)] = (data['Tmax']-data['Tmin'])
+				df['Dpoint{}'.format(i)] = data['Dpoint']				
+		return df 
 
+	def FiltarInformacion(self, dataFrame):
+		for i in range(1,6):
+			x, y = 'Long', 'Lat'
+			Long = np.array(dataFrame['{}'.format(x)])
+			Lat = np.array(dataFrame['{}'.format(y)])
+			Mexico = dataFrame.loc[dataFrame['WprSoil10_40'] <= 99]
+			Mexico = Mexico.loc[Mexico['Tpro{}'.format(i)] >= listaParametros[0]]
+			Mexico = Mexico.loc[Mexico['Tpro{}'.format(i)] <= listaParametros[1]]
+			Mexico = Mexico.loc[Mexico['Dpoint{}'.format(i)] > listaParametros[2]]
+			Mexico = Mexico.loc[(Mexico['Tmax{}'.format(i)] - Mexico['Tmin{}'.format(i)])]
 
 if __name__ == "__main__":
 	fecha = Fecha().obtencionFecha()
@@ -128,6 +160,7 @@ if __name__ == "__main__":
 	print('El proceso de descarga de archivo a empezado')
 	print('Espera algunos minutos para que el proceso llegue a finalizar...')
 	DescargarArchivos().descDocs(fecha)
-	print('------------------------------')
+	print("*"*40)
+	Menu().run()
 	dataFrame = DataFrame().BaseDataFrame(fecha)
 	print(dataFrame.head(2))
