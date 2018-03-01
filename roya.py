@@ -85,15 +85,28 @@ def data_frame(fecha): #Generacion de un DataFrame
         df['Tpro{}'.format(i)] = datos['Tpro'.format(i)] 
         df['Noch_fres{}'.format(i)] = (datos['Tmax'.format(i)] - datos['Tmin'.format(i)])
         df['Dpoint{}'.format(i)] = datos['Dpoint'.format(i)]
+<<<<<<< HEAD
         #Estas variables solo se declaran para agregarlas al final del ciclo, ya que agregarlas 5 veces seria redundante porque tienen los
         #mismos valores
         Long, Lat, WprSoil10_40 = datos['Long'], datos['Lat'], datos['WprSoil10_40']
     df['Long'], df['Lat'] ,df['WprSoil10_40'] = Long, Lat, WprSoil10_40
     variables = ['Tpro','Dpoint','Noch_fres'] #Lista con las variables a utilizar
     for j in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "roya" para determinar que filas cumplen las condiciones
+=======
+        Long = datos['Long']
+        Lat = datos['Lat']
+        WprSoil10_40 = datos['WprSoil10_40']
+    df['Long'] = Long
+    df['Lat'] = Lat
+    df['WprSoil10_40'] = WprSoil10_40
+
+    variables = ['Tpro','Dpoint','Noch_fres']
+    for j in range (1,6):
+>>>>>>> 293f7611819d7ba2db375ad820664d2414f1b261
         df['d{}'.format(j)] = df.apply(lambda x:roya(x['{}{}'.format(variables[0],j)],x['{}{}'.format(variables[1],j)],x['{}{}'.format(variables[2],j)]),axis=1)
     return df #Devuelve el DataFrame
 
+<<<<<<< HEAD
 def mapa_tot(df, fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 fias
     if os.path.exists('mapas'): #Verifica si la carpeta mapas existe (donde se almacenaran los documentos a descargar)
         os.chdir('mapas') #Accede a la carpeta mapas
@@ -133,6 +146,14 @@ def mapa_tot(df, fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 
     plt.title('Pronostico de ROYA \n De {} a {}'.format(cincodias[0], cincodias[4]))
     plt.savefig("Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]))
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
+=======
+def mapas(df):
+	"""
+	No se deben de dar solas las funciones al menos debes de agregar el comando pass
+	"""
+	pass
+
+>>>>>>> 293f7611819d7ba2db375ad820664d2414f1b261
 
 if __name__=="__main__":
     main()
