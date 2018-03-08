@@ -6,8 +6,9 @@ import numpy as np #Libreria utilizada para generar arreglos
 import matplotlib.pyplot as plt #Libreria utilizada para la generacion de los mapas
 from mpl_toolkits.basemap import Basemap #Libreria utilizada para establecer las coordenadas del mapa
 import shapefile #Libreria utilizada para leer los shapes
+import time
 def main():
-    #fecha = '2018-02-14'
+    #fecha = '2018-03-08'
     cve = claves()
     fecha = obt_fecha(cve)
     cincodias = cinco_dias(fecha)
@@ -68,7 +69,7 @@ def indice(d1,d2,d3,d4,d5):
         return 10 
     elif d1==0 and d2==1 and d3==1 and d4==1 and d5==1:
         return 9 
-    elif d1==1 and d2==1 and d3==1 and d4==1 and d5==1:
+    elif d1==1 and d2==1 and d3==1 and d4==1 and d5==0:
         return 8 
     elif d1==1 and d2==1 and d3==1 and d4==0 and d5==0:
         return 7 
@@ -98,10 +99,8 @@ def mapa_tot(fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 fias
         #mismos valores
         Long, Lat, WprSoil10_40 = datos['Long'], datos['Lat'], datos['WprSoil10_40']
     df['Long'], df['Lat'] ,df['WprSoil10_40'] = Long, Lat, WprSoil10_40
-    Long= np.array(df['Long'])
-    Long_min, Long_max = Long.min(), Long.max()
-    Lat= np.array(df['Lat'])
-    Lat_min, Lat_max = Lat.min(), Lat.max() 
+    Long, Lat = np.array(df['Long']), np.array(df['Lat'])
+    Long_min, Long_max, Lat_min, Lat_max = Long.min(), Long.max(), Lat.min(), Lat.max() 
     df = df.loc[df['WprSoil10_40'] <= 99]
     if not os.path.exists('mapas'): #Verifica si la carpeta mapas existe (donde se almacenaran los documentos a descargar)
         os.mkdir('mapas') #Crea la carpeta mapas
@@ -109,7 +108,6 @@ def mapa_tot(fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 fias
     if not os.path.exists('{}'.format(fecha)): #Verificar si la carpeta fecha existe que es donde se almacenaran los mapas
         os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
-    colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
     variables = ['Tpro','Dpoint','Noch_fres'] #Lista con las variables a utilizar
     for i in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "roya" para determinar que filas cumplen las condiciones
         df['d{}'.format(i)] = df.apply(lambda x:roya(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
@@ -123,19 +121,21 @@ def mapa_tot(fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 fias
         map.readshapefile("../../shapes/Estados", 'Mill')
         print ('Generando mapa de Pronostico de ROYA de {} ...'.format(cincodias[i-1]))
         plt.title('Pronostico de ROYA \n De {}'.format(cincodias[i-1]))
-        plt.savefig("Pronostico_ROYA_{}.png".format(cincodias[i-1]))
+        plt.savefig(fname="Pronostico_ROYA_{}.png".format(cincodias[i-1]), dpi=300)
         plt.clf()
+    colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
     map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
     for i in range (1, 11):
-        var = df.loc[df['indice']==i]   
+        var = df.loc[df['indice']==i]  
         Eje_x, Eje_y = np.array(var['Long']), np.array(var['Lat'])
         x, y = map(Eje_x, Eje_y)
         map.scatter(x, y, marker='.',color='{}'.format(colores[i-1]),s=1)
         #map.contourf(x, y, z, color='{}'.format(colores[i-2]))
     map.readshapefile("../../shapes/Estados", 'Mill')
     print ('Generando mapa de Pronostico de ROYA de {} a {} ...'.format(cincodias[0], cincodias[4]))
+    
     plt.title('Pronostico de ROYA \n De {} a {}'.format(cincodias[0], cincodias[4]))
-    plt.savefig("Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]))
+    plt.savefig(fname="Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]), dpi=300)
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 if __name__=="__main__":
     main()
