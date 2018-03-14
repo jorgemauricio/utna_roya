@@ -7,12 +7,15 @@ import matplotlib.pyplot as plt #Libreria utilizada para la generacion de los ma
 from mpl_toolkits.basemap import Basemap #Libreria utilizada para establecer las coordenadas del mapa
 import shapefile #Libreria utilizada para leer los shapes
 import time
+from scipy.interpolate import griddata as gd
+from time import gmtime, strftime
+
 def main():
-    #fecha = '2018-03-08'
+    fecha = '2018-02-01'
     cve = claves()
-    fecha = obt_fecha(cve)
+    #fecha = obt_fecha(cve)
     cincodias = cinco_dias(fecha)
-    desc_docs(fecha,cve)
+    #desc_docs(fecha,cve)
     mapa_tot(fecha,cincodias)
 def obt_fecha(cve): #Obtener la fecha actual
     fecha = []
@@ -109,10 +112,12 @@ def mapa_tot(fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 fias
         os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     variables = ['Tpro','Dpoint','Noch_fres'] #Lista con las variables a utilizar
+    
     for i in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "roya" para determinar que filas cumplen las condiciones
         df['d{}'.format(i)] = df.apply(lambda x:roya(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
     df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1)
-    for i in range (1, 6):
+    
+    '''for i in range (1, 6):
         map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
         var = df.loc[df['d{}'.format(i)]==1]
         Eje_x, Eje_y = np.array(var['Long']), np.array(var['Lat'])
@@ -123,6 +128,7 @@ def mapa_tot(fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 fias
         plt.title('Pronostico de ROYA \n De {}'.format(cincodias[i-1]))
         plt.savefig(fname="Pronostico_ROYA_{}.png".format(cincodias[i-1]), dpi=300)
         plt.clf()
+    
     colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
     map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
     for i in range (1, 11):
@@ -133,9 +139,20 @@ def mapa_tot(fecha, cincodias): #Generacion del Pronostico de ROYA en los 5 fias
         #map.contourf(x, y, z, color='{}'.format(colores[i-2]))
     map.readshapefile("../../shapes/Estados", 'Mill')
     print ('Generando mapa de Pronostico de ROYA de {} a {} ...'.format(cincodias[0], cincodias[4]))
-    
     plt.title('Pronostico de ROYA \n De {} a {}'.format(cincodias[0], cincodias[4]))
     plt.savefig(fname="Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]), dpi=300)
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
+    '''
+    map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
+    x, y = map(np.array(df['Long']), np.array(df['Lat']))
+    numCols=len(x)
+    numRows=len(y)
+    xi = np.linspace(x.min(), x.max(), numCols)
+    yi = np.linspace(y.min(), y.max(), numRows)
+    xi, yi = np.meshgrid(xi, yi)
+    z = np.array(df['indice'])
+    zi = gd((x,y), z, (xi,yi), method='cubic')
+    mapa = map.contourf(xi, yi, zi, cmap='RdYlGn')
+    cbar = map.colorbar(cs, location='rigth', pad='5%')
 if __name__=="__main__":
     main()
