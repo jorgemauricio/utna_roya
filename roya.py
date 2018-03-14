@@ -1,3 +1,4 @@
+from scipy.interpolate import griddata as gd
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 from api import claves
@@ -8,11 +9,10 @@ import ftplib
 import time
 import sys
 import os
-
 #Variables Globales 
 colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
-rangos = ('11111', '11110', '01111', '11100', '01110', '00111', '11000', '01100', '00110', '00011')
-grado = (10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+rangos = ('00011', '00110', '01100', '11000', '00111', '01110', '11100', '01111', '11110', '11111')
+grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 var = ['Tpro', 'Dpoint', 'NocFres']
 Rango = [25,30,5,15,20]
 lista = []
@@ -180,7 +180,7 @@ class DataFrame:
 		'''Genera un DataFrame uniendo las variables (Tmax, Tmin, Tpro, Dpoint)
 		de los 5 archivos descargados desde el ftp'''
 		os.chdir('data/{}'.format(fecha))
-		print('El proceso de creacion de DataFrame a comensado espero unos segundos...')
+		print('El proceso de creacion de DataFrame a comenzado espera unos segundos...')
 		df = pd.DataFrame()
 		for i in range(1, 6):
 			data = pd.read_csv("d{}.txt".format(i))
@@ -224,16 +224,23 @@ class Mapas:
 				print('Generando mapa del dia {}'.format(FehasArreglo[i-1]))
 				plt.title('Pronostico de ROYA \n del {}'.format(FehasArreglo[i-1]))
 				plt.savefig('Pronostico de ROYA del {}.png'.format(FehasArreglo[i-1]), dpi=300)
-				plt.clf()
-			if i == 6:
-				for j in range(1, 11):
-					roya = df.loc[df['Indice'] == j]
-					x, y = map(np.array(roya['Long']), np.array(roya['Lat']))
-					map.scatter(x, y, marker='.', color='{}'.format(colores[j-1]), s=1)
+			if (i == 6):
+				roya = df.loc[df['d1']=='1']
+				x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
+				numCols = len(x)
+				numRows = len(y)
+				xi = np.linspace(x.min(), x.max(), numCols)
+				yi = np.linspace(y.min(), y.max(), numRows)
+				xi, yi = np.meshgrid(xi, yi)
+				z = np.array(roya['Indice'])
+				zi = gd((x,y), z, (xi, yi), method='cubic')
+				cs = map.contourf(xi, yi, zi, grado, cmap='RdYlGn_r')
+				map.colorbar(cs)
 				map.readshapefile('../../shapes/Estados', 'Mill')
-				print('Generando Mapa del pronostico de los 5 Dias')
-				plt.title('Pronostico de ROYA de los 5 Dias')
-				plt.savefig('Pronostico de ROYA de los 5 Dias', dpi=300)
+				print('Generando mapa de los 5 Dias')
+				plt.title('Pronostico de ROYA General')
+				plt.savefig('Pronostico de ROYA General.png', dpi=300)
+			plt.clf()
 
 if __name__ == "__main__":
 	fecha = Fecha().obtencionFecha()
