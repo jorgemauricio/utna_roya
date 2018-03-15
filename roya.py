@@ -72,20 +72,74 @@ class DescargarArchivos(Login):
 			if os.path.exists('{}'.format(fecha)):
 				os.chdir('{}'.format(fecha))
 				for i in range(1, 6):
-					print("Descargando Archivo d{}.txt".format(i))
+					print("La descarga del documento esta en proceso d{}.txt".format(i))
 					self.ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write)
 			else:
 				os.mkdir('{}'.format(fecha))
 				os.chdir('{}'.format(fecha))
 				for i in range(1, 6):
-					print("Descargando Archivo d{}.txt".format(i))
+					print("La descarga del documento esta en proceso d{}.txt".format(i))
 					self.ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i), 'wb').write)
 			self.ftp.quit()
 			os.chdir('../..')
 		except ValueError:
 			print("No se a podido encontrar o crear la carpeta establecida")
 
-class GeneracionMapas():
+class GenerarModelo():
+	def Modelo(Tpro, Tmax, Tmin, Dpoint):
+		if 
+
+
+class DataFrame:
+	def BaseDataFrame(self, fecha): #Funcion que genera un dataframe tomando las variables(Tmax, Tmin, Tpro y Dpoint)
+		os.chdir('data/{}'.format(fecha))
+		for i in range(1, 6):
+			data = pd.read_csv("d{}.txt".format(i))
+			if i == 1:
+				df = data[['Long','Lat',]]
+				df = (df.assign(Tmax1 = data['Tmax']))
+				df = (df.assign(Tmin1 = data['Tmin']))
+				df = (df.assign(Tpro1 = data['Tpro']))
+				df = (df.assign(Dpoint1 = data['Dpoint']))
+			elif i == 2:
+				df = (df.assign(Tmax2 = data['Tmax']))
+				df = (df.assign(Tmin2 = data['Tmin']))
+				df = (df.assign(Tpro2 = data['Tpro']))
+				df = (df.assign(Dpoint2 = data['Dpoint']))
+			elif i == 3:
+				df = (df.assign(Tmax3 = data['Tmax']))
+				df = (df.assign(Tmin3 = data['Tmin']))
+				df = (df.assign(Tpro3 = data['Tpro']))
+				df = (df.assign(Dpoint3 = data['Dpoint']))
+			elif i == 4:
+				df = (df.assign(Tmax4 = data['Tmax']))
+				df = (df.assign(Tmin4 = data['Tmin']))
+				df = (df.assign(Tpro4 = data['Tpro']))
+				df = (df.assign(Dpoint4 = data['Dpoint']))
+			elif i == 5:
+				df = (df.assign(Tmax5 = data['Tmax']))
+				df = (df.assign(Tmin5 = data['Tmin']))
+				df = (df.assign(Tpro5 = data['Tpro']))
+				df = (df.assign(Dpoint5 = data['Dpoint']))
+		return df
+
+class GeneracionIndice():
+	def Indice(d1, d2, d3, d4, d5):
+		if d1 == 1 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 1:
+			return 10
+		elif d1 == 0 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 1:
+			return 9
+		elif d1 == 1 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 0:
+			return 8
+		elif d1 == 1 and d2 == 1 and d3 == 1 and d4 == 0 and d5 == 0:
+			return 7
+		elif d1 == 0 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 0:
+			return 6
+		elif d1 == 0 and d2 == 0 and d3 == 1 and d4 == 1 and d5 == 1:
+			return 5
+		elif d1 == 1 and d2 == 1 and d3 == 0 and d4 == 0 and d5 == 0:
+
+'''class GeneracionMapas():
 	def Crea_Map(fecha):	#Funcion para la realizacion de mapas
 		variables = ['Tpro','Dpoint', 'No_Fre']
 		for i in variables:
@@ -124,12 +178,18 @@ class GeneracionMapas():
 			map.scatter(x,y, marker='.', color='k')
 			map.readshapefile("Estados", 'Mill')
 			plt.savefig("mapas/{}_{}_d1.png".format(fecha, i))
-			print ('Generando Mapa "{}_{}_d1.jpg"'.format(fecha, i))		
+			print ('Generando Mapa "{}_{}_d1.jpg"'.format(fecha, i))'''
+
 
 	
 if __name__ == "__main__":
 	fecha = Fecha().obtencionFecha()
+	print("Fecha Obtenida: {}".format(fecha))
 	FehasArreglo = ArregloFecha().fechas(fecha)
+	print("Fechas subsecuentes al dia actual: {}".format(FehasArreglo))
 	DescargarArchivos().descDocs(fecha)
-	GeneracionMapas.Crea_Map(fecha)
+	#GeneracionMapas.Crea_Map(fecha)
+	dataFrame = DataFrame().BaseDataFrame(fecha)
+print(dataFrame.head(2))
+	
 	
