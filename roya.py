@@ -1,13 +1,12 @@
 from scipy.interpolate import griddata as gd
-from mpl_toolkits.basemap import Basemap #Libreria utilizada para establecer las coordenadas del mapa
-import matplotlib.pyplot as plt #Libreria utilizada para la generacion de los mapas
-from api import claves 
-import pandas as pd #Libreria utilizada para leer los documentos (csv)
+from mpl_toolkits.basemap import Basemap #Libreria utilizada para la visualizacion de los datos y la generacion de los mapas 
+import matplotlib.pyplot as plt #Libreria utilizada para la visualizacion de los datos y la generacion de los mapas 
+from api import claves #Modulo que contiene datos confidenciales
+import pandas as pd #Libreria utilizada para la manipulacion de los documentos
 import numpy as np #Libreria utilizada para generar arreglos
 import shapefile #Libreria utilizada para leer los shapes
-import ftplib #Libreria utilizada para conectarse a un servidor FTP y obtener informacion
+import ftplib #Libreria utilizada para conectarse a un servidor FTP 
 import time
-import sys
 import os #Libreria utilizada para crear carpetas de almacenamiento
 
 def main():
@@ -16,10 +15,10 @@ def main():
     #fecha = obt_fecha(cve)
     cincodias = cinco_dias(fecha)
     #desc_docs(fecha,cve)
-    roya = data_frame(fecha)
-    gen_mapas(roya, fecha, cinco_dias)
+    dataframe = data_frame(fecha)
+    gen_mapas(dataframe, fecha, cinco_dias)
 
-def obt_fecha(cve): #Obtener la fecha actual
+def obt_fecha(cve): #Obtiene la fecha actual
     fecha = []
     ftp = FTP(cve.ip) #Nombre del servidor
     ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
@@ -50,7 +49,7 @@ def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
     print('Lista de 5 dias generada: {}'.format(dias))
     return dias #Develve la lista de los 5 dias
 
-def desc_docs(fecha, cve): #Descargar los documentos de la carpeta con el nombre de la fecha actual
+def desc_docs(fecha, cve): #Descarga los documentos de la carpeta con el nombre de la fecha actual
     ftp = FTP(cve.ip); #Nombre del servidor
     ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
     ftp.cwd('{}'.format(fecha)) #Infresa a una carpeta dentro del servidor
@@ -108,24 +107,23 @@ def data_frame(fecha): #Generacion de un DataFrame con las variables a utilizr, 
         #mismos valores
         Long, Lat, WprSoil10_40 = datos['Long'], datos['Lat'], datos['WprSoil10_40']
     df['Long'], df['Lat'] ,df['WprSoil10_40'] = Long, Lat, WprSoil10_40
-    Long, Lat = np.array(df['Long']), np.array(df['Lat'])
-    Long_min, Long_max, Lat_min, Lat_max = Long.min(), Long.max(), Lat.min(), Lat.max() #Valors minimos y maximos de Long y Lat (limites del mapeo)
     df = df.loc[df['WprSoil10_40'] <= 99] #Filtrado para solo mapear en el area de Tierra
     variables = ['Tpro','Dpoint','Noch_fres'] #Lista con las variables a utilizar
     for i in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "modelo" para determinar que filas cumplen las condiciones
         df['d{}'.format(i)] = df.apply(lambda x:modelo(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
     df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1)
-    return df #Devielve el DataFRame generado
+    print ('DataFrame generado')
+    return df #Devielve el DataFrame generado
 
-def gen_mapas(roya, fecha, cincodias) #Funion para generar 5 mapas de cada respectivo dia, y uno del pronostico de los 5 dias
+def gen_mapas(dataframe, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y uno del pronostico de los 5 dias
     if not os.path.exists('mapas'): #Verifica si la carpeta mapas existe (donde se almacenaran los documentos a descargar)
         os.mkdir('mapas') #Crea la carpeta mapas
     os.chdir('mapas') #Accede a la carpeta mapas
     if not os.path.exists('{}'.format(fecha)): #Verificar si la carpeta fecha existe que es donde se almacenaran los mapas
         os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
-       
-    '''for i in range (1, 6):
+
+    for i in range (1, 6):
         map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
         var = roya.loc[roya['d{}'.format(i)]==1]
         Eje_x, Eje_y = np.array(var['Long']), np.array(var['Lat'])
@@ -136,21 +134,23 @@ def gen_mapas(roya, fecha, cincodias) #Funion para generar 5 mapas de cada respe
         plt.title('Pronostico de ROYA \n De {}'.format(cincodias[i-1]))
         plt.savefig(fname="Pronostico_ROYA_{}.png".format(cincodias[i-1]), dpi=300)
         plt.clf()
-    
-    colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
-    map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-    for i in range (1, 11):
-        var = roya.loc[roya['indice']==i]  
-        Eje_x, Eje_y = np.array(var['Long']), np.array(var['Lat'])
-        x, y = map(Eje_x, Eje_y)
-        map.scatter(x, y, marker='.',color='{}'.format(colores[i-1]),s=1)
-        #map.contourf(x, y, z, color='{}'.format(colores[i-2]))
-    map.readshapefile("../../shapes/Estados", 'Mill')
+    grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    roya = dataframe[dataframe['d1']==1]
+    x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
+    numCols = len(x)
+    numRows = len(y)
+    xi = np.linspace(x.min(), x.max(), numCols)
+    yi = np.linspace(y.min(), y.max(), numRows)
+    xi, yi = np.meshgrid(xi, yi)
+    z = np.array(roya['indice'])
+    zi = gd((x,y), z, (xi, yi), method='cubic')
+    cs = map.contourf(xi, yi, zi, grado, cmap='RdYlGn_r')
+    map.colorbar(cs)
+    map.readshapefile('../../shapes/Estados', 'Mill')
     print ('Generando mapa de Pronostico de ROYA de {} a {} ...'.format(cincodias[0], cincodias[4]))
     plt.title('Pronostico de ROYA \n De {} a {}'.format(cincodias[0], cincodias[4]))
     plt.savefig(fname="Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]), dpi=300)
-    os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
-    '''    
+    os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz   
     
 if __name__=="__main__":
     main()
