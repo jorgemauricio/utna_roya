@@ -105,3 +105,11 @@ api.py
 
 # mypy
 .mypy_cache/
+
+# mapas
+/mapas
+
+# shapes
+/shapes
+
+
