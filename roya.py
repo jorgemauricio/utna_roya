@@ -1,14 +1,14 @@
+from scipy.interpolate import griddata as gd
+from mpl_toolkits.basemap import Basemap #Libreria utilizada para establecer las coordenadas del mapa
+import matplotlib.pyplot as plt #Libreria utilizada para la generacion de los mapas
 from api import claves 
-from ftplib import FTP #Libreria utilizada para conectarse a un servidor FTP y obtener informacion
-import os #Libreria utilizada para crear carpetas de almacenamiento
 import pandas as pd #Libreria utilizada para leer los documentos (csv)
 import numpy as np #Libreria utilizada para generar arreglos
-import matplotlib.pyplot as plt #Libreria utilizada para la generacion de los mapas
-from mpl_toolkits.basemap import Basemap #Libreria utilizada para establecer las coordenadas del mapa
 import shapefile #Libreria utilizada para leer los shapes
+import ftplib #Libreria utilizada para conectarse a un servidor FTP y obtener informacion
 import time
-from scipy.interpolate import griddata as gd
-from time import gmtime, strftime
+import sys
+import os #Libreria utilizada para crear carpetas de almacenamiento
 
 def main():
     fecha = '2018-02-01'
