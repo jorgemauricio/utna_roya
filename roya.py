@@ -96,7 +96,7 @@ def indice(d1,d2,d3,d4,d5): #Funcion utilizada para generar un indice que determ
     else:
         return 0
 
-def data_frame(fecha): #Generacion del Pronostico de ROYA en los 5 fias
+def data_frame(fecha): #Generacion de un DataFrame con las variables a utilizr, al igual que 5 columnas para la deteccion de ROYA y un indice de impacto
     df = pd.DataFrame() #Declaracion del DataFrame
     for i in range (1, 6): #Ciclo donde se prosesan los 5 documentos
         datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i)) #Almacenar dato correspondiente en datos
@@ -109,15 +109,15 @@ def data_frame(fecha): #Generacion del Pronostico de ROYA en los 5 fias
         Long, Lat, WprSoil10_40 = datos['Long'], datos['Lat'], datos['WprSoil10_40']
     df['Long'], df['Lat'] ,df['WprSoil10_40'] = Long, Lat, WprSoil10_40
     Long, Lat = np.array(df['Long']), np.array(df['Lat'])
-    Long_min, Long_max, Lat_min, Lat_max = Long.min(), Long.max(), Lat.min(), Lat.max() 
-    df = df.loc[df['WprSoil10_40'] <= 99]
+    Long_min, Long_max, Lat_min, Lat_max = Long.min(), Long.max(), Lat.min(), Lat.max() #Valors minimos y maximos de Long y Lat (limites del mapeo)
+    df = df.loc[df['WprSoil10_40'] <= 99] #Filtrado para solo mapear en el area de Tierra
     variables = ['Tpro','Dpoint','Noch_fres'] #Lista con las variables a utilizar
     for i in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "modelo" para determinar que filas cumplen las condiciones
         df['d{}'.format(i)] = df.apply(lambda x:modelo(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
     df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1)
-    return df
+    return df #Devielve el DataFRame generado
 
-def gen_mapas(roya, fecha, cincodias)
+def gen_mapas(roya, fecha, cincodias) #Funion para generar 5 mapas de cada respectivo dia, y uno del pronostico de los 5 dias
     if not os.path.exists('mapas'): #Verifica si la carpeta mapas existe (donde se almacenaran los documentos a descargar)
         os.mkdir('mapas') #Crea la carpeta mapas
     os.chdir('mapas') #Accede a la carpeta mapas
