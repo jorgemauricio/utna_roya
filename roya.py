@@ -34,11 +34,11 @@ class Fecha(Login):
 
 class ArregloFecha():
 	def fechas(self, fecha): #Genera un arreglo de 5 fechas subsecuentes a la fecha ingresada por parametro
-		ano, mes, dia = (int(arreglo) for arreglo in fecha.split('-'))
-		if mes in (1 , 3, 5, 7, 8, 10, 12):
+		ano, mes, dia = (int(arreglo) for arreglo in fecha.split('-')) #Se almacenan los datos y estos son divididos por un "-"
+		if mes in (1 , 3, 5, 7, 8, 10, 12):			#Aqui se muestra la validación de la fecha
 			dias_mes = 31
 		elif mes == 2:
-			if ano % 4 == 0 and (ano % 100 != 0 or ano % 400 == 0):
+			if ano % 4 == 0 and (ano % 100 != 0 or ano % 400 == 0):	#Si el mes es viciesto
 				dias_mes = 29
 			else:
 				dias_mes = 28
@@ -85,9 +85,9 @@ class DescargarArchivos(Login):
 		except ValueError:
 			print("No se a podido encontrar o crear la carpeta establecida")
 
-class GenerarModelo():
+'''class GenerarModelo():
 	def Modelo(Tpro, Tmax, Tmin, Dpoint):
-		if 
+		if '''
 
 
 class DataFrame:
@@ -138,6 +138,15 @@ class GeneracionIndice():
 		elif d1 == 0 and d2 == 0 and d3 == 1 and d4 == 1 and d5 == 1:
 			return 5
 		elif d1 == 1 and d2 == 1 and d3 == 0 and d4 == 0 and d5 == 0:
+			return 4
+		elif d1 == 0 and d2 == 1 and d3 == 1 and d4 == 0 and d5 == 0:
+			return 3
+		elif d1 == 0 and d2 == 0 and d3 == 1 and d4 == 1 and d5 == 0:
+			return 2
+		elif d1 == 0 and d2 == 0 and d3 == 0 and d4 == 1 and d5 == 1:
+			return 1
+		else:
+			return 0
 
 '''class GeneracionMapas():
 	def Crea_Map(fecha):	#Funcion para la realizacion de mapas
