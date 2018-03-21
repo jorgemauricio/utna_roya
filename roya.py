@@ -124,35 +124,34 @@ def gen_mapas(roya, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     Long = np.array(roya['Long'])
     Lat = np.array(roya['Lat'])
-    '''
-    for i in range (1, 6):
-        map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-        var = roya.loc[roya['d{}'.format(i)]==1]
-        Eje_x, Eje_y = np.array(var['Long']), np.array(var['Lat'])
-        x, y = map(Eje_x, Eje_y)
-        map.scatter(x, y, marker='.',color='#00FF00',s=1)
-        map.readshapefile("../../shapes/Estados", 'Mill')
-        print ('Generando mapa de Pronostico de ROYA de {} ...'.format(cincodias[i-1]))
-        plt.title('Pronostico de ROYA \n De {}'.format(cincodias[i-1]))
-        plt.savefig(fname="Pronostico_ROYA_{}.png".format(cincodias[i-1]), dpi=300)
+    for i in range (1, 7):
+        map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), 
+            urcrnrlon=Long.max(), urcrnrlat=Lat.max())
+        if (i > 0 and i < 6):
+            roya = df.loc[df['d{}'.format(i)]=='1']
+            x, y = map(np.array(roya['Long']), np.array(roya['Lat']))
+            map.scatter(x, y, marker='.', color='green', s=1)
+            map.readshapefile('../../shapes/Estados', 'Mill')
+            print('Generando mapa del dia {}'.format(FehasArreglo[i-1]))
+            plt.title('Pronostico de ROYA \n del {}'.format(FehasArreglo[i-1]))
+            plt.savefig('Pronostico de ROYA del {}.png'.format(FehasArreglo[i-1]), dpi=300)
+        if (i == 6):
+            roya = df.loc[df['d1']=='1']
+            x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
+            numCols = len(x)
+            numRows = len(y)
+            xi = np.linspace(x.min(), x.max(), numCols)
+            yi = np.linspace(y.min(), y.max(), numRows)
+            xi, yi = np.meshgrid(xi, yi)
+            z = np.array(roya['Indice'])
+            zi = gd((x,y), z, (xi, yi), method='cubic')
+            cs = map.contourf(xi, yi, zi, grado, cmap='RdYlGn_r')
+            map.colorbar(cs)
+            map.readshapefile('../../shapes/Estados', 'Mill')
+            print('Generando mapa de los 5 Dias')
+            plt.title('Pronostico de ROYA General')
+            plt.savefig('Pronostico de ROYA General.png', dpi=300)
         plt.clf()
-    '''    
-    map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-    grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-    x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
-    numCols = len(x)
-    numRows = len(y)
-    xi = np.linspace(x.min(), x.max(), numCols)
-    yi = np.linspace(y.min(), y.max(), numRows)
-    xi, yi = np.meshgrid(xi, yi)
-    z = np.array(roya['indice'])
-    zi = gd((x,y), z, (xi, yi), method='cubic')
-    cs = map.contourf(xi, yi, zi, grado, cmap='RdYlGn_r')
-    map.colorbar(cs)
-    map.readshapefile('../../shapes/Estados', 'Mill')
-    print ('Generando mapa de Pronostico de ROYA de {} a {} ...'.format(cincodias[0], cincodias[4]))
-    plt.title('Pronostico de ROYA \n De {} a {}'.format(cincodias[0], cincodias[4]))
-    plt.savefig(fname="Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]), dpi=300)
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz   
 if __name__=="__main__":
     main()
