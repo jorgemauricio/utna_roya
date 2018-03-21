@@ -15,8 +15,8 @@ def main():
     #fecha = obt_fecha(cve)
     cincodias = cinco_dias(fecha)
     #desc_docs(fecha,cve)
-    dataframe = data_frame(fecha)
-    gen_mapas(dataframe, fecha, cinco_dias)
+    roya = data_frame(fecha)
+    gen_mapas(roya, fecha, cincodias)
 
 def obt_fecha(cve): #Obtiene la fecha actual
     fecha = []
@@ -74,9 +74,9 @@ def modelo(Tpro,Dpoint,Noch_fres): #Funcion utilizada para devolver valores de 1
 def indice(d1,d2,d3,d4,d5): #Funcion utilizada para generar un indice que determinara el grado de impacto de la ROYA en base al modelo
     if d1==1 and d2==1 and d3==1 and d4==1 and d5==1:
         return 10 
-    elif d1==0 and d2==1 and d3==1 and d4==1 and d5==1:
-        return 9 
     elif d1==1 and d2==1 and d3==1 and d4==1 and d5==0:
+        return 9 
+    elif d1==0 and d2==1 and d3==1 and d4==1 and d5==1:
         return 8 
     elif d1==1 and d2==1 and d3==1 and d4==0 and d5==0:
         return 7 
@@ -115,14 +115,16 @@ def data_frame(fecha): #Generacion de un DataFrame con las variables a utilizr, 
     print ('DataFrame generado')
     return df #Devielve el DataFrame generado
 
-def gen_mapas(dataframe, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y uno del pronostico de los 5 dias
+def gen_mapas(roya, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y uno del pronostico de los 5 dias
     if not os.path.exists('mapas'): #Verifica si la carpeta mapas existe (donde se almacenaran los documentos a descargar)
         os.mkdir('mapas') #Crea la carpeta mapas
     os.chdir('mapas') #Accede a la carpeta mapas
     if not os.path.exists('{}'.format(fecha)): #Verificar si la carpeta fecha existe que es donde se almacenaran los mapas
         os.mkdir('{}'.format(fecha)) #Crea la carpeta fecha donde se almacenaran los documentos
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
-
+    Long = np.array(roya['Long'])
+    Lat = np.array(roya['Lat'])
+    '''
     for i in range (1, 6):
         map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
         var = roya.loc[roya['d{}'.format(i)]==1]
@@ -134,8 +136,9 @@ def gen_mapas(dataframe, fecha, cincodias): #Eenera 5 mapas de cada respectivo d
         plt.title('Pronostico de ROYA \n De {}'.format(cincodias[i-1]))
         plt.savefig(fname="Pronostico_ROYA_{}.png".format(cincodias[i-1]), dpi=300)
         plt.clf()
+    '''    
+    map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
     grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-    roya = dataframe[dataframe['d1']==1]
     x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
     numCols = len(x)
     numRows = len(y)
@@ -151,6 +154,5 @@ def gen_mapas(dataframe, fecha, cincodias): #Eenera 5 mapas de cada respectivo d
     plt.title('Pronostico de ROYA \n De {} a {}'.format(cincodias[0], cincodias[4]))
     plt.savefig(fname="Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]), dpi=300)
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz   
-    
 if __name__=="__main__":
     main()
