@@ -85,43 +85,12 @@ class DescargarArchivos(Login):
 		except ValueError:
 			print("No se a podido encontrar o crear la carpeta establecida")
 
-'''class GenerarModelo():
-	def Modelo(Tpro, Tmax, Tmin, Dpoint):
-		if '''
-
-
-class DataFrame:
-	def BaseDataFrame(self, fecha): #Funcion que genera un dataframe tomando las variables(Tmax, Tmin, Tpro y Dpoint)
-		os.chdir('data/{}'.format(fecha))
-		for i in range(1, 6):
-			data = pd.read_csv("d{}.txt".format(i))
-			if i == 1:
-				df = data[['Long','Lat',]]
-				df = (df.assign(Tmax1 = data['Tmax']))
-				df = (df.assign(Tmin1 = data['Tmin']))
-				df = (df.assign(Tpro1 = data['Tpro']))
-				df = (df.assign(Dpoint1 = data['Dpoint']))
-			elif i == 2:
-				df = (df.assign(Tmax2 = data['Tmax']))
-				df = (df.assign(Tmin2 = data['Tmin']))
-				df = (df.assign(Tpro2 = data['Tpro']))
-				df = (df.assign(Dpoint2 = data['Dpoint']))
-			elif i == 3:
-				df = (df.assign(Tmax3 = data['Tmax']))
-				df = (df.assign(Tmin3 = data['Tmin']))
-				df = (df.assign(Tpro3 = data['Tpro']))
-				df = (df.assign(Dpoint3 = data['Dpoint']))
-			elif i == 4:
-				df = (df.assign(Tmax4 = data['Tmax']))
-				df = (df.assign(Tmin4 = data['Tmin']))
-				df = (df.assign(Tpro4 = data['Tpro']))
-				df = (df.assign(Dpoint4 = data['Dpoint']))
-			elif i == 5:
-				df = (df.assign(Tmax5 = data['Tmax']))
-				df = (df.assign(Tmin5 = data['Tmin']))
-				df = (df.assign(Tpro5 = data['Tpro']))
-				df = (df.assign(Dpoint5 = data['Dpoint']))
-		return df
+class GenerarModelo():
+	def Modelo(Tpro, Dpoint, Noch_fres):
+		if Tpro >= 25 and Tpro <= 30 and Dpoint > 5 and Noch_fres >= 15 and Noch_fres <=20:
+			return 1
+		else:
+			return 0
 
 class GeneracionIndice():
 	def Indice(d1, d2, d3, d4, d5):
@@ -148,14 +117,50 @@ class GeneracionIndice():
 		else:
 			return 0
 
-'''class GeneracionMapas():
+class DataFrame:
+	def BaseDataFrame(self, fecha): #Funcion que genera un dataframe tomando las variables(Tmax, Tmin, Tpro y Dpoint)
+		os.chdir('data/{}'.format(fecha))
+		for i in range(1, 6):
+		    data = pd.read_csv("data/2018-03-20/d{}.txt".format(i))
+		    if i == 1:
+		        df = data[['Long','Lat',]]
+		        df = (df.assign(Noch_fres1 = (data['Tmax'] - data['Tmin'])))
+		        df = (df.assign(Tpro1 = data['Tpro']))
+		        df = (df.assign(Dpoint1 = data['Dpoint']))
+		    elif i == 2:
+		        df = (df.assign(Noch_fres2 = (data['Tmax'] - data['Tmin'])))
+		        df = (df.assign(Tpro2 = data['Tpro']))
+		        df = (df.assign(Dpoint2 = data['Dpoint']))
+		    elif i == 3:
+		        df = (df.assign(Noch_fres3 = (data['Tmax'] - data['Tmin'])))
+		        df = (df.assign(Tpro3 = data['Tpro']))
+		        df = (df.assign(Dpoint3 = data['Dpoint']))
+		    elif i == 4:
+		        df = (df.assign(Noch_fres4 = (data['Tmax'] - data['Tmin'])))
+		        df = (df.assign(Tpro4 = data['Tpro']))
+		        df = (df.assign(Dpoint4 = data['Dpoint']))
+		    elif i == 5:
+		        df = (df.assign(Noch_fres5 = (data['Tmax'] - data['Tmin'])))
+		        df = (df.assign(Tpro5 = data['Tpro']))
+		        df = (df.assign(Dpoint5 = data['Dpoint']))
+
+			Var = ['Tpro', 'Dpoint', 'Noch_fres']
+			for i in range(1,6):
+			    df['d{}'.format(i)] = df.apply(lambda x:Modelo(x['{}{}'.format(Var[0],i)], x['{}{}'.format(Var[1],i)], x['{}{}'.format(Var[2],i)]), axis=1)
+			df['Indice'] = df.apply(lambda x:Indice(x['d1'], x['d2'], x['d3'], x['d4'], x['d5']), axis = 1)
+
+		return df
+
+
+
+class GeneracionMapas():
 	def Crea_Map(fecha):	#Funcion para la realizacion de mapas
-		variables = ['Tpro','Dpoint', 'No_Fre']
+		variables = ['Tpro','Dpoint', 'No_Fre']		#Variables que utilizaremos para mapear la probabilidad de roya
 		for i in variables:
 			data = pd.read_csv('data/{}/d1.txt'.format(fecha))
 			x = 'Long'
 			y = 'Lat'
-			Suelo = data.loc[data['WprSoil10_40'] <=99]
+			Suelo = data.loc[data['WprSoil10_40'] <=99]		#Variable para conocer donde hay tierra
 			Long = np.array(data['{}'.format(x)])
 			Long_min = Long.min()
 			Long_max = Long.max()
@@ -187,7 +192,7 @@ class GeneracionIndice():
 			map.scatter(x,y, marker='.', color='k')
 			map.readshapefile("Estados", 'Mill')
 			plt.savefig("mapas/{}_{}_d1.png".format(fecha, i))
-			print ('Generando Mapa "{}_{}_d1.jpg"'.format(fecha, i))'''
+			print ('Generando Mapa "{}_{}_d1.jpg"'.format(fecha, i))
 
 
 	
