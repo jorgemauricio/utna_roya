@@ -86,7 +86,7 @@ class DescargarArchivos(Login):
 			print("No se a podido encontrar o crear la carpeta establecida")
 
 class GenerarModelo():
-	def Modelo(Tpro, Dpoint, Noch_fres):
+	def Modelo(Tpro,Dpoint,Noch_fres):
 		if Tpro >= 25 and Tpro <= 30 and Dpoint > 5 and Noch_fres >= 15 and Noch_fres <=20:
 			return 1
 		else:
@@ -119,36 +119,35 @@ class GeneracionIndice():
 
 class DataFrame:
 	def BaseDataFrame(self, fecha): #Funcion que genera un dataframe tomando las variables(Tmax, Tmin, Tpro y Dpoint)
-		os.chdir('data/{}'.format(fecha))
 		for i in range(1, 6):
-		    data = pd.read_csv("data/2018-03-20/d{}.txt".format(i))
-		    if i == 1:
-		        df = data[['Long','Lat',]]
-		        df = (df.assign(Noch_fres1 = (data['Tmax'] - data['Tmin'])))
-		        df = (df.assign(Tpro1 = data['Tpro']))
-		        df = (df.assign(Dpoint1 = data['Dpoint']))
-		    elif i == 2:
-		        df = (df.assign(Noch_fres2 = (data['Tmax'] - data['Tmin'])))
-		        df = (df.assign(Tpro2 = data['Tpro']))
-		        df = (df.assign(Dpoint2 = data['Dpoint']))
-		    elif i == 3:
-		        df = (df.assign(Noch_fres3 = (data['Tmax'] - data['Tmin'])))
-		        df = (df.assign(Tpro3 = data['Tpro']))
-		        df = (df.assign(Dpoint3 = data['Dpoint']))
-		    elif i == 4:
-		        df = (df.assign(Noch_fres4 = (data['Tmax'] - data['Tmin'])))
-		        df = (df.assign(Tpro4 = data['Tpro']))
-		        df = (df.assign(Dpoint4 = data['Dpoint']))
-		    elif i == 5:
-		        df = (df.assign(Noch_fres5 = (data['Tmax'] - data['Tmin'])))
-		        df = (df.assign(Tpro5 = data['Tpro']))
-		        df = (df.assign(Dpoint5 = data['Dpoint']))
-
-			Var = ['Tpro', 'Dpoint', 'Noch_fres']
-			for i in range(1,6):
-			    df['d{}'.format(i)] = df.apply(lambda x:Modelo(x['{}{}'.format(Var[0],i)], x['{}{}'.format(Var[1],i)], x['{}{}'.format(Var[2],i)]), axis=1)
-			df['Indice'] = df.apply(lambda x:Indice(x['d1'], x['d2'], x['d3'], x['d4'], x['d5']), axis = 1)
-
+			data = pd.read_csv("data/{}/d{}.txt".format(fecha, i))
+			if i == 1:
+				df = data[['Long','Lat',]]
+				df = (df.assign(Tpro1 = data['Tpro']))
+				df = (df.assign(Dpoint1 = data['Dpoint']))
+				df = (df.assign(Noch_fres1 = (data['Tmax'] - data['Tmin'])))
+			elif i == 2:
+				df = (df.assign(Tpro2 = data['Tpro']))
+				df = (df.assign(Dpoint2 = data['Dpoint']))
+				df = (df.assign(Noch_fres2 = (data['Tmax'] - data['Tmin'])))
+			elif i == 3:
+				df = (df.assign(Tpro3 = data['Tpro']))
+				df = (df.assign(Dpoint3 = data['Dpoint']))
+				df = (df.assign(Noch_fres3 = (data['Tmax'] - data['Tmin'])))
+			elif i == 4:
+				df = (df.assign(Tpro4 = data['Tpro']))
+				df = (df.assign(Dpoint4 = data['Dpoint']))
+				df = (df.assign(Noch_fres4 = (data['Tmax'] - data['Tmin'])))
+			elif i == 5:
+				df = (df.assign(Tpro5 = data['Tpro']))
+				df = (df.assign(Dpoint5 = data['Dpoint']))
+				df = (df.assign(Noch_fres5 = (data['Tmax'] - data['Tmin'])))
+			
+		variables = ['Tpro','Dpoint','Noch_fres']
+		for i in range(1 ,6):
+			df['d{}'.format(i)] = df.apply(lambda x:GenerarModelo.Modelo(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
+		df['Indice'] = df.apply(lambda x:GeneracionIndice.Indice(x['d1'], x['d2'], x['d3'], x['d4'], x['d5']), axis = 1)
+			
 		return df
 
 
@@ -201,9 +200,9 @@ if __name__ == "__main__":
 	print("Fecha Obtenida: {}".format(fecha))
 	FehasArreglo = ArregloFecha().fechas(fecha)
 	print("Fechas subsecuentes al dia actual: {}".format(FehasArreglo))
-	DescargarArchivos().descDocs(fecha)
+	#DescargarArchivos().descDocs(fecha)
 	#GeneracionMapas.Crea_Map(fecha)
 	dataFrame = DataFrame().BaseDataFrame(fecha)
-print(dataFrame.head(2))
+	print(dataFrame.head())
 	
 	
