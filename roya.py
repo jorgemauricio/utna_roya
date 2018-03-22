@@ -196,7 +196,8 @@ class GeneracionMapas():
 
 	
 if __name__ == "__main__":
-	fecha = Fecha().obtencionFecha()
+	fecha = "2018-02-15"
+	#fecha = Fecha().obtencionFecha()
 	print("Fecha Obtenida: {}".format(fecha))
 	FehasArreglo = ArregloFecha().fechas(fecha)
 	print("Fechas subsecuentes al dia actual: {}".format(FehasArreglo))
@@ -204,5 +205,6 @@ if __name__ == "__main__":
 	#GeneracionMapas.Crea_Map(fecha)
 	dataFrame = DataFrame().BaseDataFrame(fecha)
 	print(dataFrame.head())
+	print(dataFrame.loc[dataFrame['d1']>1])
 	
 	
