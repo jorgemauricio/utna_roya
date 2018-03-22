@@ -11,12 +11,13 @@ import os #Libreria utilizada para crear carpetas de almacenamiento
 
 def main():
     fecha = '2018-02-01'
+    print ('Conexion realizada y fecha obtenida "{}"'.format(fecha))
     cve = claves()
     #fecha = obt_fecha(cve)
     cincodias = cinco_dias(fecha)
-    #desc_docs(fecha,cve)
-    roya = data_frame(fecha)
-    gen_mapas(roya, fecha, cincodias)
+    desc_docs(fecha,cve)
+    #roya = data_frame(fecha)
+    #gen_mapas(roya, fecha, cincodias)
 
 def obt_fecha(cve): #Obtiene la fecha actual
     fecha = []
@@ -61,7 +62,7 @@ def desc_docs(fecha, cve): #Descarga los documentos de la carpeta con el nombre 
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor en 1
         print ('Descargando archivo d{}.txt, de la fecha {} ...'.format(i, fecha))
-        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
+        #ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
