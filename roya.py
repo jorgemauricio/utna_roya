@@ -10,6 +10,7 @@ import time
 import os #Libreria utilizada para crear carpetas de almacenamiento
 
 def main():
+    grado = [1,2,3,4,5,6,7,8,9,10]
     fecha = '2018-02-01'
     cve = claves()
     #fecha = obt_fecha(cve)
@@ -24,7 +25,7 @@ def obt_fecha(cve): #Obtiene la fecha actual
     ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
     ftp.dir(fecha.append) #Se almacena toda la informacion que se encuentra en el directorio actual dentro del arreglo
     fecha = fecha[-1].split()[-1] #Se toma el ultimo valor del arreglo, se separa la cadena en un arreglo dividido por espacios y se toma el ultimo valor.
-    print ('Conexion realizada y fecha obtenida "{}"'.format(fecha))
+    print ('Conexion realizada y fecha obtenida "{}".\n'.format(fecha))
     return fecha # Se devuelve el valor obtenido (la fecha)
 def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
     ano, mes, dia = (int(i) for i in fecha.split("-")) #Almacenamos cada dato correspondiente dividiendolo por un (-)
@@ -46,7 +47,7 @@ def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
                 dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes+1, n - (dias_mes - dia)))
             else:
                 dias.append('{:04d}-01-{:02d}'.format(ano + 1, n - (dias_mes - dia)))
-    print('Lista de 5 dias generada: {}'.format(dias))
+    print('Lista de 5 dias generada: {}.\n'.format(dias))
     return dias #Develve la lista de los 5 dias
 
 def desc_docs(fecha, cve): #Descarga los documentos de la carpeta con el nombre de la fecha actual
@@ -97,6 +98,7 @@ def indice(d1,d2,d3,d4,d5): #Funcion utilizada para generar un indice que determ
 
 def data_frame(fecha): #Generacion de un DataFrame con las variables a utilizr, al igual que 5 columnas para la deteccion de ROYA y un indice de impacto
     df = pd.DataFrame() #Declaracion del DataFrame
+    print ('\nGenerando DataFrame ...')
     for i in range (1, 6): #Ciclo donde se prosesan los 5 documentos
         datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i)) #Almacenar dato correspondiente en datos
         #Se almacena cada una de las variables a utilizar
@@ -112,7 +114,7 @@ def data_frame(fecha): #Generacion de un DataFrame con las variables a utilizr, 
     for i in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "modelo" para determinar que filas cumplen las condiciones
         df['d{}'.format(i)] = df.apply(lambda x:modelo(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
     df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1)
-    print ('DataFrame generado')
+    print ('DataFrame generado.\n')
     return df #Devielve el DataFrame generado
 
 def gen_mapas(df, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y uno del pronostico de los 5 dias
@@ -126,18 +128,17 @@ def gen_mapas(df, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y u
     Lat = np.array(df['Lat'])
     for i in range (1, 7):
         map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-        if (i > 0 and i < 6):
-            print(df.head(2))
-            print(i)
-            roya = df.loc[df['d{}'.format(i)]=='1']
+        '''if (i > 0 and i < 6):
+            roya = df.loc[df['d{}'.format(i)]==1]
             x, y = map(np.array(roya['Long']), np.array(roya['Lat']))
             map.scatter(x, y, marker='.', color='green', s=1)
             map.readshapefile('../../shapes/Estados', 'Mill')
             print('Generando mapa del dia {}'.format(cincodias[i-1]))
             plt.title('Pronostico de ROYA \n del {}'.format(cincodias[i-1]))
             plt.savefig('Pronostico_de_ROYA_del_{}.png'.format(cincodias[i-1]), dpi=300)
+        '''
         if (i == 6):
-            roya = df.loc[df['d1']=='1']
+            roya = df.loc[df['d1']==1]
             x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
             numCols = len(x)
             numRows = len(y)
@@ -149,7 +150,7 @@ def gen_mapas(df, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y u
             cs = map.contourf(xi, yi, zi, grado, cmap='RdYlGn_r')
             map.colorbar(cs)
             map.readshapefile('../../shapes/Estados', 'Mill')
-            print('Generando mapa del pronostico del {} al {}'.format(cincodias[0], cincodias[4]))
+            print('\nGenerando mapa del pronostico del {} al {}'.format(cincodias[0], cincodias[4]))
             plt.title('Pronostico de ROYA del {} al {}'.format(cincodias[0], cincodias[4]))
             plt.savefig('Pronostico_de_ROYA_del_{}_al_{}.png'.format(cincodias[0], cincodias[4]), dpi=300)
         plt.clf()
