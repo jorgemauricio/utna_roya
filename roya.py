@@ -117,7 +117,7 @@ class GeneracionIndice():
 		else:
 			return 0
 
-class DataFrame:
+class DataFrame():
 	def BaseDataFrame(self, fecha): #Funcion que genera un dataframe tomando las variables(Tmax, Tmin, Tpro y Dpoint)
 		for i in range(1, 6):
 			data = pd.read_csv("data/{}/d{}.txt".format(fecha, i))
@@ -196,7 +196,7 @@ class GeneracionMapas():
 
 	
 if __name__ == "__main__":
-	fecha = "2018-02-15"
+	fecha = "2018-03-23"
 	#fecha = Fecha().obtencionFecha()
 	print("Fecha Obtenida: {}".format(fecha))
 	FehasArreglo = ArregloFecha().fechas(fecha)
@@ -205,6 +205,6 @@ if __name__ == "__main__":
 	#GeneracionMapas.Crea_Map(fecha)
 	dataFrame = DataFrame().BaseDataFrame(fecha)
 	print(dataFrame.head())
-	print(dataFrame.loc[dataFrame['d1']>1])
+	print(dataFrame.loc[dataFrame['d1']==1])
 	
 	
