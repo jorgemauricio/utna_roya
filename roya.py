@@ -9,8 +9,10 @@ import ftplib #Libreria utilizada para conectarse a un servidor FTP
 import time
 import os #Libreria utilizada para crear carpetas de almacenamiento
 
+grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+variables = ('Tpro','Dpoint','Noch_fres') #Lista con las variables a utilizar
+
 def main():
-    grado = [1,2,3,4,5,6,7,8,9,10]
     fecha = '2018-02-01'
     cve = claves()
     #fecha = obt_fecha(cve)
@@ -110,7 +112,6 @@ def data_frame(fecha): #Generacion de un DataFrame con las variables a utilizr, 
         Long, Lat, WprSoil10_40 = datos['Long'], datos['Lat'], datos['WprSoil10_40']
     df['Long'], df['Lat'] ,df['WprSoil10_40'] = Long, Lat, WprSoil10_40
     df = df.loc[df['WprSoil10_40'] <= 99] #Filtrado para solo mapear en el area de Tierra
-    variables = ['Tpro','Dpoint','Noch_fres'] #Lista con las variables a utilizar
     for i in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "modelo" para determinar que filas cumplen las condiciones
         df['d{}'.format(i)] = df.apply(lambda x:modelo(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
     df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1)
@@ -128,7 +129,7 @@ def gen_mapas(df, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y u
     Lat = np.array(df['Lat'])
     for i in range (1, 7):
         map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
-        '''if (i > 0 and i < 6):
+        if (i > 0 and i < 6):
             roya = df.loc[df['d{}'.format(i)]==1]
             x, y = map(np.array(roya['Long']), np.array(roya['Lat']))
             map.scatter(x, y, marker='.', color='green', s=1)
@@ -136,9 +137,8 @@ def gen_mapas(df, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y u
             print('Generando mapa del dia {}'.format(cincodias[i-1]))
             plt.title('Pronostico de ROYA \n del {}'.format(cincodias[i-1]))
             plt.savefig('Pronostico_de_ROYA_del_{}.png'.format(cincodias[i-1]), dpi=300)
-        '''
         if (i == 6):
-            roya = df.loc[df['d1']==1]
+            roya = df.loc[df['indice']>0]
             x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
             numCols = len(x)
             numRows = len(y)
@@ -154,6 +154,20 @@ def gen_mapas(df, fecha, cincodias): #Eenera 5 mapas de cada respectivo dia, y u
             plt.title('Pronostico de ROYA del {} al {}'.format(cincodias[0], cincodias[4]))
             plt.savefig('Pronostico_de_ROYA_del_{}_al_{}.png'.format(cincodias[0], cincodias[4]), dpi=300)
         plt.clf()
-    os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz   
+    os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
+    '''
+    colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
+    map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), urcrnrlon=Long.max(), urcrnrlat=Lat.max())
+    for i in range (1, 11):
+        var = df.loc[df['indice']==i]  
+        Eje_x, Eje_y = np.array(var['Long']), np.array(var['Lat'])
+        x, y = map(Eje_x, Eje_y)
+        map.scatter(x, y, marker='.',color='{}'.format(colores[i-1]),s=1)
+    map.readshapefile("../../shapes/Estados", 'Mill')
+    print ('Generando mapa de Pronostico de ROYA de {} a {} ...'.format(cincodias[0], cincodias[4]))
+    plt.title('Pronostico de ROYA \n De {} a {}'.format(cincodias[0], cincodias[4]))
+    plt.savefig(fname="Pronostico_ROYA_{}_a_{}.png".format(cincodias[0], cincodias[4]), dpi=300)
+    os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
+    '''
 if __name__=="__main__":
     main()
