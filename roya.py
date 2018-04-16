@@ -1,3 +1,4 @@
+#Librerias 
 from scipy.interpolate import griddata as gd
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
@@ -9,30 +10,42 @@ import ftplib
 import time
 import sys
 import os
-#Variables Globales 
+#Lista para especificar el color del mapeo de informacion
 colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
+
+#Lista para generar el Indice del grado de peligro de la enfermedad Roya
 rangos = ('00011', '00110', '01100', '11000', '00111', '01110', '11100', '01111', '11110', '11111')
+
+#Lista que determina el grado de peligro que se presente la enfermedad Roya
 grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+#Lista con las variables, a tomar de los documentos .txt  
 var = ['Tpro', 'Dpoint', 'NocFres']
+
+#Lista con los rangos para detectar la enfermedad Roya
 Rango = [25,30,5,15,20]
 lista = []
 
 class Login():
 	'''Clase constructura.'''
 	def __init__(self):
+		#Variables utilizadas para conectarnos al servidor del instituto
 		self.clv = claves()
 		self.ftp = ftplib.FTP(self.clv.ip)
 		self.ftp.login(self.clv.usr, self.clv.pwd)
 
 class Fecha(Login):
+	'''Clase para conectarnos al servidor y descargar la fecha actual'''
 	def __init__(self):
+		#Constructor que era los atributos del constructor padre(Class Login())
 		super().__init__()
 
 	def obtencionFecha(self):
-		'''Obtiene la fecha desde el FTP del Instituto'''
+		#Metodo que obtiene la fecha desde el FTP del Instituto
 		arregloFecha = []
 		self.ftp.dir(arregloFecha.append)
 		a = -1
+		#Ciclo que terminara hasta que devuelve una fecha puede ser la actual o el día anterior y sucesivamente
 		while(True):
 			arreglo = arregloFecha[a].split()
 			for i in arreglo:
@@ -41,9 +54,8 @@ class Fecha(Login):
 			a -= 1
 
 class ArregloFecha():
+	'''Clase que genere un arreglo con la fecha actual y 4 subsecuentes'''
 	def fechas(self, fecha):
-		'''Genera un arreglo de 5 fechas subsecuentes 
-		a la fecha ingresada por parametro'''
 		ano, mes, dia = (int(arreglo) for arreglo in fecha.split('-'))
 		if mes in (1 , 3, 5, 7, 8, 10, 12):
 			dias_mes = 31
@@ -57,6 +69,7 @@ class ArregloFecha():
 		dias = []
 		for i in range(5):
 			if dia + i <= dias_mes:
+				#Sintaxis que agrega las 4 fechas subsecuntes en la lista DIAS
 				dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes, dia + i))
 			else:
 				if mes != 12:
@@ -66,12 +79,12 @@ class ArregloFecha():
 		return dias
 
 class DescargarArchivos(Login):
+	'''Clase para descar los 5 archivos en formato .txt 
+	respectivo a la fecha ingresada por parametro'''
 	def __init__(self):
 		super().__init__()
 
 	def descarga(self):
-		'''Metodo para descar los 5 dias respectivo a la fecha 
-		ingresada por parametro'''
 		self.ftp = ftplib.FTP(self.clv.ip)
 		self.ftp.login(self.clv.usr, self.clv.pwd)
 		self.ftp.cwd('{}'.format(fecha))
@@ -81,8 +94,6 @@ class DescargarArchivos(Login):
 		self.ftp.quit()
 
 	def descDocs(self, fecha):
-		'''Descargar los 5 archivos respectivo a la fecha
-		ingresada por parametro'''
 		if os.path.exists('data'):
 			os.chdir('data')
 		else:
@@ -98,8 +109,9 @@ class DescargarArchivos(Login):
 		os.chdir('../..')
 
 class Menu:
-	'''Muestra un menu y responde a la eleccion seleccionada por el usuario'''
+	'''Clase que muestra un menu y responde a la eleccion seleccionada por el usuario'''
 	def __init__(self):
+	#Metodo constructor de la clase Menu
 		self.elecciones = {
 			"1": self.IngresarPara,
 			"2": self.Default,
@@ -114,9 +126,10 @@ class Menu:
 3 Cancelar y salir. """)
 
 	def run(self):
-		'''Muestra el menu y responde a la eleccion.'''
+		#Metodo que muestra el menu y responde a la eleccion del usuario.
 		self.MostrarMenu()
 		op = 1
+		#Ciclo While que valida que el usuario ingrese un valor valido 
 		while(op != 2):
 			eleccion = input("Selecciona la opcion: ")
 			accion = self.elecciones.get(eleccion)
@@ -126,20 +139,24 @@ class Menu:
 			else:
 				print("{} no es una eleccion valida".format(eleccion))
 
-	def IngresarPara(self):
+	def IngresarParametros(self):
+		#Metodo que valida que el usuario ingrese valores integer y no valores string o boolean
 		validar = 0
+		#Ciclo while que valida que el usuario solo ingrese valores enteres 
 		while (validar != 1):
 			try:
 				lista.append(int(input("Temperatura promedio Minima: ")))
 				validar += 1
 			except ValueError:
 				print("Ingresa solo numeros")
+		#Ciclo while que valida que el usuario solo ingrese valores enteres
 		while (validar != 2):
 			try:
 				lista.append(int(input("Temperatura promedio Maxima: ")))
 				validar += 1
 			except ValueError:
 				print("Ingresa solo numeros")
+		#Ciclo while que valida que el usuario solo ingrese valores enteres
 		while (validar != 3):
 			try:
 				lista.append(int(input("Dpoint: ")))
@@ -153,22 +170,26 @@ class Menu:
 		pass
 
 	def salir(self):
+		#Metodo que cierra la aplacacion de la ROYA
 		print("Gracias por usar la aplicacion ROYA")
 		sys.exit(0)
 
 class DataFrame:
+	'''Clase que genera un DataFrame con las las variables a utilizar 
+	de los 5 archivos csv para optimizar el procesado de informacion'''
 	def roya(self, Tpro, Dpoint, NocFres):
-		'''Metodo para la generacion de valo 1 o 0 de cada fila del DataFrame,
-		Y poder pronosticar si la enfermedad roya se presenta en el dia'''
+		#Metodo para la generacion de valo 1 o 0 de cada fila del DataFrame,
+		#Y poder pronosticar si la enfermedad roya se presenta en el dia
 		if (Tpro >= Rango[0] and Tpro <= Rango[1]  and Dpoint > Rango[2] and NocFres >= Rango[3] and NocFres <= Rango[4]):
 			return '1'
 		else:
 			return '0'
 
 	def indice(self, d1, d2, d3, d4, d5):
-		'''Metodo que evalua el grado de'''
+		#Metodo que evalua el grado de la probabilidad de incidencia de la enfermedad de la ROYA
 		rango = '{}{}{}{}{}'.format(d1,d2,d3,d4,d5)
 		if rango in rangos:
+			#Ciclo for que 
 			for i in range(0, len(rangos)):
 				if rangos[i] == rango:
 					indice = rangos.index(rangos[i])
@@ -222,10 +243,11 @@ class Mapas:
 				map.scatter(x, y, marker='.', color='green', s=1)
 				map.readshapefile('../../shapes/Estados', 'Mill')
 				print('Generando mapa del dia {}'.format(FehasArreglo[i-1]))
+				plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @2018 INIFAP', fontsize = 15 ,color='green')
 				plt.title('Pronostico de ROYA \n del {}'.format(FehasArreglo[i-1]))
-				plt.savefig('Pronostico de ROYA del {}.png'.format(FehasArreglo[i-1]), dpi=300)
+				plt.savefig('Dia{}.png'.format(i), dpi=300)
 			if (i == 6):
-				roya = df.loc[df['d1']=='1']
+				roya = df.loc[df['Indice'] >= 0]
 				x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
 				numCols = len(x)
 				numRows = len(y)
@@ -237,18 +259,19 @@ class Mapas:
 				cs = map.contourf(xi, yi, zi, grado, cmap='RdYlGn_r')
 				map.colorbar(cs)
 				map.readshapefile('../../shapes/Estados', 'Mill')
-				print('Generando mapa de los 5 Dias')
-				plt.title('Pronostico de ROYA General')
-				plt.savefig('Pronostico de ROYA General.png', dpi=300)
+				print('Generando mapa de Pronostico de los 5 dias del: 2018-03-14 al 2018-03-18')
+				plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @2018 INIFAP', fontsize = 15 ,color='green')
+				plt.title('Pronostico de ROYA General a 5 dias \n del: 2018-03-14 al 2018-03-18')
+				plt.savefig('d{}.png'.format(i), dpi=300)
 			plt.clf()
 
 if __name__ == "__main__":
 	fecha = Fecha().obtencionFecha()
 	FehasArreglo = ArregloFecha().fechas(fecha)
-	print('El proceso de descarga de archivo a empezado')
-	print('Espera algunos minutos para que el proceso llegue a finalizar...')
-	DescargarArchivos().descDocs(fecha)
+	#print('\nEl proceso de descarga de archivo a empezado')
+	#print('Espera algunos minutos para que el proceso llegue a finalizar...')
+	#DescargarArchivos().descDocs(fecha)
 	print("*"*40)
-	Menu().run()
+	#Menu().run()
 	df = DataFrame().BaseDataFrame(fecha)
 	Mapas().GenerarMapas(df,fecha,FehasArreglo)
