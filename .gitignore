@@ -97,19 +97,16 @@ ENV/
 # mkdocs documentation
 /site
 
-# datos
+#datos
 /datos
+
+#data
+/data
+
+#mapas
+/mapas
 
 # api
 api.py
-
-# mypy
-.mypy_cache/
-
-# mapas
-/mapas
-
-# shapes
-/shapes
 
 
