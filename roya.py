@@ -1,5 +1,4 @@
 from scipy.interpolate import griddata as gd
-
 from mpl_toolkits.basemap import Basemap #Libreria utilizada para la visualizacion de los datos y la generacion de los mapas 
 import matplotlib.pyplot as plt #Libreria utilizada para la visualizacion de los datos y la generacion de los mapas 
 from api import claves #Modulo que contiene datos confidenciales
@@ -10,8 +9,9 @@ import ftplib #Libreria utilizada para conectarse a un servidor FTP
 import time
 import os #Libreria utilizada para crear carpetas de almacenamiento
 
-grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-variables = ('Tpro','Dpoint','Noch_fres') #Lista con las variables a utilizar
+rangos = ('00011', '00110', '01100', '11000', '00111', '01110', '11100', '01111', '11110', '11111') # Lista de rangos 
+grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) #Lista de grados asociados a los rangos
+var = ('Tpro','Dpoint','Tmax','Tmin') #Lista con las variables a utilizar
 
 def main():
     cve = claves()
@@ -30,6 +30,22 @@ def obt_fecha(cve): #Obtiene la fecha actual
     print ('Conexion realizada y fecha obtenida "{}".\n'.format(fecha))
     return fecha # Se devuelve el valor obtenido (la fecha)
 
+def modelo(Tpro,Dpoint,Tmax,Tmin): #Funcion utilizada para devolver valores de 1/0 el lugar de Verdadero/Falso, en una declaracion posterior
+    if Tpro >= 25 and Tpro <=30 and Dpoint > 5 and (Tmax-Tmin) >= 15 and (Tmax-Tmin) <=20:  #Filtrado de datos donde se presenta la ROYA
+        return '1'
+    else:
+        return '0'
+
+def indice(d1,d2,d3,d4,d5): #Funcion utilizada para generar un indice que determinara el grado de impacto de la ROYA en base al modelo
+    rango = '{}{}{}{}{}'.format(d1,d2,d3,d4,d5)
+    if rango in rangos:
+        for i in range(0, len(rangos)):
+            if rangos[i] == rango:
+                ubic = rangos.index(rangos[i])
+                return grado[ubic]
+    else:
+        return 0
+
 def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
     ano, mes, dia = (int(i) for i in fecha.split("-")) #Almacenamos cada dato correspondiente dividiendolo por un (-)
     if mes in (1, 3, 5, 7, 8, 10, 12): #Validacion de fecha
@@ -41,17 +57,17 @@ def cinco_dias(fecha): #Obtener cuatro dias posteriores a la fecha obtenida
             dias_mes = 28
     elif mes in (4, 6, 9, 11):
         dias_mes = 30
-    dias = []
+    cincodias = []
     for n in range(0, 5): #Ciclo utilizado para almacenar los 5 dias
         if dia + n <= dias_mes:
-            dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes, dia + n)) #'{:04d}-{:02d}-{:02d}' - Formato para la fecha
+            cincodias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes, dia + n)) #'{:04d}-{:02d}-{:02d}' - Formato para la fecha
         else:                                                               #Agrega un sero en el caso de los nuemros unicos entre 1 - 9
             if mes != 12:
-                dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes+1, n - (dias_mes - dia)))
+                cincodias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes+1, n - (dias_mes - dia)))
             else:
-                dias.append('{:04d}-01-{:02d}'.format(ano + 1, n - (dias_mes - dia)))
-    print('Lista de 5 dias generada: {}.\n'.format(dias))
-    return dias #Develve la lista de los 5 dias
+                cincodias.append('{:04d}-01-{:02d}'.format(ano + 1, n - (dias_mes - dia)))
+    print('Lista de 5 dias generada: {}.\n'.format(cincodias))
+    return cincodias #Develve la lista de los 5 dias
 
 def desc_docs(fecha, cve): #Descarga los documentos de la carpeta con el nombre de la fecha actual
     ftp = ftplib.FTP(cve.ip); #Nombre del servidor
@@ -65,56 +81,23 @@ def desc_docs(fecha, cve): #Descarga los documentos de la carpeta con el nombre 
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor en 1
         print ('Descargando archivo d{}.txt, de la fecha {} ...'.format(i, fecha))
-        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
+        #ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
-
-def modelo(Tpro,Dpoint,Noch_fres): #Funcion utilizada para devolver valores de 1/0 el lugar de Verdadero/Falso, en una declaracion posterior
-    if Tpro >= 25 and Tpro <=30 and Dpoint > 5 and Noch_fres >= 15 and Noch_fres <=20: #Filtrado de datos donde se presenta la ROYA
-        return '1'
-    else:
-        return '0'
-
-def indice(d1,d2,d3,d4,d5): #Funcion utilizada para generar un indice que determinara el grado de impacto de la ROYA en base al modelo
-    if d1==1 and d2==1 and d3==1 and d4==1 and d5==1:
-        return 10 
-    elif d1==1 and d2==1 and d3==1 and d4==1 and d5==0:
-        return 9 
-    elif d1==0 and d2==1 and d3==1 and d4==1 and d5==1:
-        return 8 
-    elif d1==1 and d2==1 and d3==1 and d4==0 and d5==0:
-        return 7 
-    elif d1==0 and d2==1 and d3==1 and d4==1 and d5==0:
-        return 6
-    elif d1==0 and d2==0 and d3==1 and d4==1 and d5==1:
-        return 5 
-    elif d1==1 and d2==1 and d3==0 and d4==0 and d5==0:
-        return 4 
-    elif d1==0 and d2==1 and d3==1 and d4==0 and d5==0:
-        return 3 
-    elif d1==0 and d2==0 and d3==1 and d4==1 and d5==0:
-        return 2 
-    elif d1==0 and d2==0 and d3==0 and d4==1 and d5==1:
-        return 1 
-    else:
-        return 0
 
 def data_frame(fecha): #Generacion de un DataFrame con las variables a utilizr, al igual que 5 columnas para la deteccion de ROYA y un indice de impacto
     df = pd.DataFrame() #Declaracion del DataFrame
     print ('\nGenerando DataFrame ...')
     for i in range (1, 6): #Ciclo donde se prosesan los 5 documentos
-        datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i)) #Almacenar dato correspondiente en datos
-        #Se almacena cada una de las variables a utilizar
-        df['Tpro{}'.format(i)] = datos['Tpro'.format(i)] 
-        df['Noch_fres{}'.format(i)] = (datos['Tmax'.format(i)] - datos['Tmin'.format(i)])
-        df['Dpoint{}'.format(i)] = datos['Dpoint'.format(i)]
-        #Estas variables solo se declaran para agregarlas al final del ciclo, ya que agregarlas 5 veces seria redundante porque tienen los
-        #mismos valores
+        datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i))  #Almacenar dato correspondiente en datos
+        for j in var: #Ciclo para almacenar las variables de cada dia respectivamente
+            df['{}{}'.format(j,i)] = datos[j] 
+        #Estas variables solo se declaran para agregarlas al final del ciclo, ya que agregarlas 5 veces seria redundante porque tienen los mismos valores
         Long, Lat, WprSoil10_40 = datos['Long'], datos['Lat'], datos['WprSoil10_40']
     df['Long'], df['Lat'] ,df['WprSoil10_40'] = Long, Lat, WprSoil10_40
     df = df.loc[df['WprSoil10_40'] <= 99] #Filtrado para solo mapear en el area de Tierra
-    for i in range (1,6): #Cliclo utilizado para crear 5 columnas (1 por cada filtro de variables), utilizando la funcion "modelo" para determinar que filas cumplen las condiciones
-        df['d{}'.format(i)] = df.apply(lambda x:modelo(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
+    for i in range (1,6): #Ciclo para generar cinco columnas una para cada dia, usando la funcion de validacion del modelo 
+        df['d{}'.format(i)] = df.apply(lambda x:modelo(x['{}{}'.format(var[0],i)],x['{}{}'.format(var[1],i)],x['{}{}'.format(var[2],i)],x['{}{}'.format(var[3],i)]),axis=1)
     df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1)
     print ('DataFrame generado.\n')
     return df #Devielve el DataFrame generado
