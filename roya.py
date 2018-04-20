@@ -65,15 +65,15 @@ def desc_docs(fecha, cve): #Descarga los documentos de la carpeta con el nombre 
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor en 1
         print ('Descargando archivo d{}.txt, de la fecha {} ...'.format(i, fecha))
-        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
+        #ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
 def modelo(Tpro,Dpoint,Noch_fres): #Funcion utilizada para devolver valores de 1/0 el lugar de Verdadero/Falso, en una declaracion posterior
     if Tpro >= 25 and Tpro <=30 and Dpoint > 5 and Noch_fres >= 15 and Noch_fres <=20: #Filtrado de datos donde se presenta la ROYA
-        return 1
+        return '1'
     else:
-        return 0
+        return '0'
 
 def indice(d1,d2,d3,d4,d5): #Funcion utilizada para generar un indice que determinara el grado de impacto de la ROYA en base al modelo
     if d1==1 and d2==1 and d3==1 and d4==1 and d5==1:
