@@ -1,210 +1,159 @@
-from api import claves
+from mpl_toolkits.basemap import Basemap 
+import matplotlib.pyplot as plt 
+from ftplib import FTP 
+from api import claves 
+import shapefile
 import pandas as pd 
-import ftplib 
-import time 
-import sys
-import requests
+import numpy as np 
 import os
-import shapefile 
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+from scipy.interpolate import griddata as gd
 
+def main(): #Contiene las funciones que se ejecutarán
+    cve = claves()
+    fecha = obt_fecha(cve)
+    cincodias = cinco_dias(fecha)
+    #desc_docs(fecha,cve)
+    mapa_tot(fecha,cincodias)
 
-class Login(): # Contiene las clases constructuras.
-	def __init__(self):
-		self.clv = claves()
-		self.ftp = ftplib.FTP(self.clv.ip)
-		self.ftp.login(self.clv.usr, self.clv.pwd)
+def obt_fecha(cve): #Obtiene la fecha desde el FTP del Instituto
+    fecha = []
+    ftp = FTP(cve.ip) 
+    ftp.login(cve.usr, cve.pwd) 
+    ftp.dir(fecha.append) 
+    fecha = fecha[-1].split()[-1] 
+    print('La conexión fue un exito y la fecha obtenida es "{}".\n'.format(fecha))
+    return fecha 
 
-class Fecha(Login):
-	def __init__(self):
-		super().__init__()
+def cinco_dias(fecha): #Genera un arreglo de 5 fechas subsecuentes a la fecha ingresada por parametro
+    ano, mes, dia = (int(i) for i in fecha.split("-")) #Se almacenan los datos y estos son divididos por un "-"
+    if mes in (1, 3, 5, 7, 8, 10, 12): #Aqui se muestra la validación de la fecha
+        dias_mes = 31
+    elif mes == 2:
+        if ano % 4 == 0 and (ano % 100 != 0 or ano % 400 == 0): 
+            dias_mes = 29
+        else:
+            dias_mes = 28
+    elif mes in (4, 6, 9, 11):
+        dias_mes = 30
+    dias = []
+    for n in range(0, 5):
+        if dia + n <= dias_mes:
+            dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes, dia + n))
+        else:                                                               
+            if mes != 12:
+                dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes+1, n - (dias_mes - dia)))
+            else:
+                dias.append('{:04d}-01-{:02d}'.format(ano + 1, n - (dias_mes - dia)))
+    print('La lista se generó correctamente: {}.\n'.format(dias))
+    return dias 
 
-	def obtencionFecha(self): #Obtiene la fecha desde el FTP del Instituto
-		try:
-			arregloFecha = []
-			self.ftp.dir(arregloFecha.append)
-			arreglo = arregloFecha[-1].split()
-			for i in arreglo:
-				if i == time.strftime("%Y-%m-%d"):
-					return (i)
-		except ValueError:
-			print('El servidor no a encontrado la fecha establecida')
+def desc_docs(fecha, cve): #Descarga los 5 archivos respectivos a la fecha ingresada por parametro
+    ftp = FTP(cve.ip); 
+    ftp.login(cve.usr, cve.pwd) 
+    ftp.cwd('{}'.format(fecha)) 
+    if not os.path.exists('datos'): 
+        os.mkdir('datos') 
+    os.chdir('datos') 
+    if not os.path.exists('{}'.format(fecha)): 
+        os.mkdir('{}'.format(fecha)) 
+    os.chdir('{}'.format(fecha)) 
+    for i in range(1, 6): 
+        print ('Descargando archivo d{}.txt, de la fecha {} ...'.format(i, fecha))
+        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) 
+    ftp.quit()
+    os.chdir('../..') 
 
-class ArregloFecha():
-	def fechas(self, fecha): #Genera un arreglo de 5 fechas subsecuentes a la fecha ingresada por parametro
-		ano, mes, dia = (int(arreglo) for arreglo in fecha.split('-')) #Se almacenan los datos y estos son divididos por un "-"
-		if mes in (1 , 3, 5, 7, 8, 10, 12):			#Aqui se muestra la validación de la fecha
-			dias_mes = 31
-		elif mes == 2:
-			if ano % 4 == 0 and (ano % 100 != 0 or ano % 400 == 0):	#Si el mes es viciesto
-				dias_mes = 29
-			else:
-				dias_mes = 28
-		elif mes in (4, 6, 9, 11):
-			dias_mes = 30
-		dias = []
-		for i in range(5):
-			if dia + i <= dias_mes:
-				dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes, dia + i))
-			else:
-				if mes != 12:
-					dias.append('{:04d}-{:02d}-{:02d}'.format(ano, mes+1, i - (dias_mes - dia)))
-				else:
-					dias.append('{:04d}-01-{:02d}'.format(ano+1, i - (dias_mes - dia)))
-		return dias
+def roya(Tpro,Dpoint,Noch_fres): #Función para la creación del modelo para calcular la probabilidad de aparición de roya
+    if Tpro >= 25 and Tpro <=30 and Dpoint > 5 and Noch_fres >= 15 and Noch_fres <=20: 
+        return 1
+    else:
+        return 0
 
-class DescargarArchivos(Login):
-	def __init__(self):
-		super().__init__()
+def indice(d1,d2,d3,d4,d5): #Función que crea el indice para la probabilidad de aparición de la roya
+    if d1==1 and d2==1 and d3==1 and d4==1 and d5==1:
+        return 10 
+    elif d1==0 and d2==1 and d3==1 and d4==1 and d5==1:
+        return 9 
+    elif d1==1 and d2==1 and d3==1 and d4==1 and d5==1:
+        return 8 
+    elif d1==1 and d2==1 and d3==1 and d4==0 and d5==0:
+        return 7 
+    elif d1==0 and d2==1 and d3==1 and d4==1 and d5==0:
+        return 6
+    elif d1==0 and d2==0 and d3==1 and d4==1 and d5==1:
+        return 5 
+    elif d1==1 and d2==1 and d3==0 and d4==0 and d5==0:
+        return 4 
+    elif d1==0 and d2==1 and d3==1 and d4==0 and d5==0:
+        return 3 
+    elif d1==0 and d2==0 and d3==1 and d4==1 and d5==0:
+        return 2 
+    elif d1==0 and d2==0 and d3==0 and d4==1 and d5==1:
+        return 1 
+    else:
+        return 0
 
-	def descDocs(self, fecha): #Descarga los 5 archivos respectivos a la fecha ingresada por parametro
-		self.ftp = ftplib.FTP(self.clv.ip)
-		self.ftp.login(self.clv.usr, self.clv.pwd)
-		self.ftp.cwd('{}'.format(fecha))
-		try: 
-			if os.path.exists('data'):
-				os.chdir('data')
-			else:
-				os.mkdir('data')
-				os.chdir('data')
-			if os.path.exists('{}'.format(fecha)):
-				os.chdir('{}'.format(fecha))
-				for i in range(1, 6):
-					print("La descarga del documento esta en proceso d{}.txt".format(i))
-					self.ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write)
-			else:
-				os.mkdir('{}'.format(fecha))
-				os.chdir('{}'.format(fecha))
-				for i in range(1, 6):
-					print("La descarga del documento esta en proceso d{}.txt".format(i))
-					self.ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i), 'wb').write)
-			self.ftp.quit()
-			os.chdir('../..')
-		except ValueError:
-			print("No se a podido encontrar o crear la carpeta establecida")
+def mapa_tot(fecha, cincodias): 
+    colores = ['#00FF00','#00FF00','#00FF00','#00FF00','#FFFF00','#FFFF00','#FFFF00','#FF8000','#FF8000','#FF0000']
+    rangos = ('00011', '00110', '01100', '11000', '00111', '01110', '11100', '01111', '11110', '11111')
+    grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    var = ['Tpro', 'Dpoint', 'Noch_fres']
+    df = pd.DataFrame()
+    for i in range (1, 6):
+        datos = pd.read_csv('datos/{}/d{}.txt'.format(fecha, i)) 
+        df['Tpro{}'.format(i)] = datos['Tpro'.format(i)] 
+        df['Noch_fres{}'.format(i)] = (datos['Tmax'.format(i)] - datos['Tmin'.format(i)])
+        df['Dpoint{}'.format(i)] = datos['Dpoint'.format(i)]
+        Long, Lat, WprSoil10_40 = datos['Long'], datos['Lat'], datos['WprSoil10_40']
+    df['Long'], df['Lat'] ,df['WprSoil10_40'] = Long, Lat, WprSoil10_40
+    Long= np.array(df['Long'])
+    Long_min, Long_max = Long.min(), Long.max()
+    Lat= np.array(df['Lat'])
+    Lat_min, Lat_max = Lat.min(), Lat.max() 
+    df = df.loc[df['WprSoil10_40'] <= 99]
+    if not os.path.exists('mapas'): 
+        os.mkdir('mapas') 
+    os.chdir('mapas')
+    if not os.path.exists('{}'.format(fecha)): 
+        os.mkdir('{}'.format(fecha)) 
+    os.chdir('{}'.format(fecha))
+    
+    for i in range (1,6): 
+        df['d{}'.format(i)] = df.apply(lambda x:roya(x['{}{}'.format(var[0],i)],x['{}{}'.format(var[1],i)],x['{}{}'.format(var[2],i)]),axis=1)
+    df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1)
+    
+    Long = np.array(df['Long'])
+    Lat = np.array(df['Lat'])
+    for i in range (1, 7):
+        map = Basemap(projection='mill', resolution='c', llcrnrlon=Long.min(), llcrnrlat=Lat.min(), 
+            urcrnrlon=Long.max(), urcrnrlat=Lat.max())
+        if (i > 0 and i < 6):
+            royam = df.loc[df['d{}'.format(i)]==1]
+            x, y = map(np.array(royam['Long']), np.array(royam['Lat']))
+            map.scatter(x, y, marker='.', color='green', s=1)
+            map.readshapefile('../../shapes/Estados', 'Mill')
+            print('Generando mapa del dia {}'.format(cincodias[i-1]))
+            plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @2018 INIFAP', fontsize = 15 ,color='green')
+            plt.title('Pronostico de ROYA \n del {}'.format(cincodias[i-1]))
+            plt.savefig('d{}.png'.format(i), dpi=300)
+        if (i == 6):
+            royam = df.loc[df['indice'] > 0]
+            x, y = map(np.array(royam['Long']), np.array(royam['Lat'])) 
+            numCols = len(x)
+            numRows = len(y)
+            xi = np.linspace(x.min(), x.max(), numCols)
+            yi = np.linspace(y.min(), y.max(), numRows)
+            xi, yi = np.meshgrid(xi, yi)
+            z = np.array(royam['indice'])
+            zi = gd((x,y), z, (xi, yi), method='cubic')
+            cs = map.contourf(xi, yi, zi, grado, cmap='RdYlGn_r')
+            map.colorbar(cs)
+            map.readshapefile('../../shapes/Estados', 'Mill')
+            print('Generando mapa de Pronostico del: {} al {}'.format(cincodias[0],cincodias[-1]))
+            plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @2018 INIFAP', fontsize = 15 ,color='green')
+            plt.title('Pronostico de ROYA General a 5 dias \n del: {} al {}'.format(cincodias[0],cincodias[-1]))
+            plt.savefig('d{}.png'.format(i), dpi=300)
+        plt.clf()
 
-class GenerarModelo():
-	def Modelo(Tpro,Dpoint,Noch_fres):
-		if Tpro >= 25 and Tpro <= 30 and Dpoint > 5 and Noch_fres >= 15 and Noch_fres <=20:
-			return 1
-		else:
-			return 0
-
-class GeneracionIndice():
-	def Indice(d1, d2, d3, d4, d5):
-		if d1 == 1 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 1:
-			return 10
-		elif d1 == 0 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 1:
-			return 9
-		elif d1 == 1 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 0:
-			return 8
-		elif d1 == 1 and d2 == 1 and d3 == 1 and d4 == 0 and d5 == 0:
-			return 7
-		elif d1 == 0 and d2 == 1 and d3 == 1 and d4 == 1 and d5 == 0:
-			return 6
-		elif d1 == 0 and d2 == 0 and d3 == 1 and d4 == 1 and d5 == 1:
-			return 5
-		elif d1 == 1 and d2 == 1 and d3 == 0 and d4 == 0 and d5 == 0:
-			return 4
-		elif d1 == 0 and d2 == 1 and d3 == 1 and d4 == 0 and d5 == 0:
-			return 3
-		elif d1 == 0 and d2 == 0 and d3 == 1 and d4 == 1 and d5 == 0:
-			return 2
-		elif d1 == 0 and d2 == 0 and d3 == 0 and d4 == 1 and d5 == 1:
-			return 1
-		else:
-			return 0
-
-class DataFrame():
-	def BaseDataFrame(self, fecha): #Funcion que genera un dataframe tomando las variables(Tmax, Tmin, Tpro y Dpoint)
-		for i in range(1, 6):
-			data = pd.read_csv("data/{}/d{}.txt".format(fecha, i))
-			if i == 1:
-				df = data[['Long','Lat',]]
-				df = (df.assign(Tpro1 = data['Tpro']))
-				df = (df.assign(Dpoint1 = data['Dpoint']))
-				df = (df.assign(Noch_fres1 = (data['Tmax'] - data['Tmin'])))
-			elif i == 2:
-				df = (df.assign(Tpro2 = data['Tpro']))
-				df = (df.assign(Dpoint2 = data['Dpoint']))
-				df = (df.assign(Noch_fres2 = (data['Tmax'] - data['Tmin'])))
-			elif i == 3:
-				df = (df.assign(Tpro3 = data['Tpro']))
-				df = (df.assign(Dpoint3 = data['Dpoint']))
-				df = (df.assign(Noch_fres3 = (data['Tmax'] - data['Tmin'])))
-			elif i == 4:
-				df = (df.assign(Tpro4 = data['Tpro']))
-				df = (df.assign(Dpoint4 = data['Dpoint']))
-				df = (df.assign(Noch_fres4 = (data['Tmax'] - data['Tmin'])))
-			elif i == 5:
-				df = (df.assign(Tpro5 = data['Tpro']))
-				df = (df.assign(Dpoint5 = data['Dpoint']))
-				df = (df.assign(Noch_fres5 = (data['Tmax'] - data['Tmin'])))
-			
-		variables = ['Tpro','Dpoint','Noch_fres']
-		for i in range(1 ,6):
-			df['d{}'.format(i)] = df.apply(lambda x:GenerarModelo.Modelo(x['{}{}'.format(variables[0],i)],x['{}{}'.format(variables[1],i)],x['{}{}'.format(variables[2],i)]),axis=1)
-		df['Indice'] = df.apply(lambda x:GeneracionIndice.Indice(x['d1'], x['d2'], x['d3'], x['d4'], x['d5']), axis = 1)
-			
-		return df
-
-
-
-class GeneracionMapas():
-	def Crea_Map(fecha):	#Funcion para la realizacion de mapas
-		variables = ['Tpro','Dpoint', 'No_Fre']		#Variables que utilizaremos para mapear la probabilidad de roya
-		for i in variables:
-			data = pd.read_csv('data/{}/d1.txt'.format(fecha))
-			x = 'Long'
-			y = 'Lat'
-			Suelo = data.loc[data['WprSoil10_40'] <=99]		#Variable para conocer donde hay tierra
-			Long = np.array(data['{}'.format(x)])
-			Long_min = Long.min()
-			Long_max = Long.max()
-			Lat = np.array(data['{}'.format(y)])
-			Lat_min = Lat.min()
-			Lat_max = Lat.max()
-			if i == 'Tpro':
-				Var = Suelo.loc[Suelo['{}'.format(i)] >=25]
-				Var = Var.loc[Suelo['{}'.format(i)] <=30]
-			elif i == 'Dpoint':
-				Var = Suelo.loc[Suelo['{}'.format(i)] >5]
-			elif i == 'No_Fre':
-				Var = Suelo.loc[(Suelo['Tmax'] - Suelo['Tmin']) >=15]
-				Var = Suelo.loc[(Suelo['Tmax'] - Suelo['Tmin']) <=20]
-
-			Eje_x = np.array(Var['{}'.format(x)])
-			Eje_y = np.array(Var['{}'.format(y)])
-
-			map = Basemap(projection = 'mill', 
-				   resolution = 'l',
-				   area_thresh = 0.01,
-				   llcrnrlon = Long.min(), llcrnrlat = Lat.min(), 
-				   urcrnrlon = Long.max(), urcrnrlat = Lat.max())
-	        #map.drawcountries(color="gray")
-			#map.fillcontinents(color='#CD5C5C', lake_color='#53BEFD')
-			#map.drawmapboundary(color='black', linewidth=0.5, fill_color='#008080')
-
-			x,y = map(Eje_x, Eje_y)
-			map.scatter(x,y, marker='.', color='k')
-			map.readshapefile("Estados", 'Mill')
-			plt.savefig("mapas/{}_{}_d1.png".format(fecha, i))
-			print ('Generando Mapa "{}_{}_d1.jpg"'.format(fecha, i))
-
-
-	
-if __name__ == "__main__":
-	fecha = "2018-03-23"
-	#fecha = Fecha().obtencionFecha()
-	print("Fecha Obtenida: {}".format(fecha))
-	FehasArreglo = ArregloFecha().fechas(fecha)
-	print("Fechas subsecuentes al dia actual: {}".format(FehasArreglo))
-	#DescargarArchivos().descDocs(fecha)
-	#GeneracionMapas.Crea_Map(fecha)
-	dataFrame = DataFrame().BaseDataFrame(fecha)
-	print(dataFrame.head())
-	print(dataFrame.loc[dataFrame['d1']==1])
-	
-	
+if __name__=="__main__":
+    main()
