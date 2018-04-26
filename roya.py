@@ -1,19 +1,19 @@
 from scipy.interpolate import griddata as gd
-from mpl_toolkits.basemap import Basemap #Libreria utilizada para la visualizacion de los datos y la generacion de los mapas 
-import matplotlib.pyplot as plt #Libreria utilizada para la visualizacion de los datos y la generacion de los mapas 
+from mpl_toolkits.basemap import Basemap #Librería utilizada para la visualización de los datos y la generación de los mapas
+import matplotlib.pyplot as plt #Librería utilizada para la visualización de los datos y la generación de los mapas
 from api import claves #Modulo que contiene datos confidenciales
-import pandas as pd #Libreria utilizada para la manipulacion de los documentos
-import numpy as np #Libreria utilizada para generar arreglos
-import shapefile #Libreria utilizada para leer los shapes
-import ftplib #Libreria utilizada para conectarse a un servidor FTP 
-import time
-import os #Libreria utilizada para crear carpetas de almacenamiento
+import pandas as pd #Librería utilizada para la manipulación de los documentos
+import numpy as np #Librería utilizada para generar arreglos
+import shapefile #Librería utilizada para leer los shapes
+import ftplib #Librería utilizada para conectarse a un servidor FTP
+import os #Librería utilizada para crear carpetas de almacenamiento
 
-rangos = ('00011', '00110', '01100', '11000', '00111', '01110', '11100', '01111', '11110', '11111') # Lista de rangos 
-grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) #Lista de grados asociados a los rangos
-var = ('Tpro','Dpoint','Tmax','Tmin') #Lista con las variables a utilizar
+rangos = ('00011', '00110', '01100', '11000', '00111', '01110', '11100', '01111', '11110', '11111') """Lista de rangos"""
+grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) """Lista de grados asociados a los rangos"""
+var = ('Tpro','Dpoint','Tmax','Tmin') """Lista con las variables a utilizar"""
 
 def main():
+    #fecha = '2018-02-14'
     cve = claves()
     fecha = obt_fecha(cve)
     cincodias = cinco_dias(fecha)
@@ -21,10 +21,10 @@ def main():
     df = data_frame(fecha)
     gen_mapas(df, fecha, cincodias)
 
-def obt_fecha(cve): #Obtiene la fecha actual
+def obt_fecha(cve): """Función creada para obtener la fecha desde el servidor FTP"""
     fecha = []
-    ftp = ftplib.FTP(cve.ip) #Nombre del servidor
-    ftp.login(cve.usr, cve.pwd) #Usuario y contrasena del servidor
+    ftp = ftplib.FTP(cve.ip) """Nombre del servidor"""
+    ftp.login(cve.usr, cve.pwd) """Usuario y contrasena del servidor"""
     ftp.dir(fecha.append) #Se almacena toda la informacion que se encuentra en el directorio actual dentro del arreglo
     fecha = fecha[-1].split()[-1] #Se toma el ultimo valor del arreglo, se separa la cadena en un arreglo dividido por espacios y se toma el ultimo valor.
     print ('Conexion realizada y fecha obtenida "{}".\n'.format(fecha))
@@ -81,7 +81,7 @@ def desc_docs(fecha, cve): #Descarga los documentos de la carpeta con el nombre 
     os.chdir('{}'.format(fecha)) #Ingresar a la carpeta fecha
     for i in range(1, 6): #Ciclo que realiza 5 veces el proceso incrementando su valor en 1
         print ('Descargando archivo d{}.txt, de la fecha {} ...'.format(i, fecha))
-        #ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
+        ftp.retrbinary('RETR d{}.txt'.format(i),open('d{}.txt'.format(i),'wb').write) #Descarga los documentos
     ftp.quit()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
 
@@ -120,6 +120,7 @@ def gen_mapas(df, fecha, cincodias): #Genera 5 mapas de cada respectivo dia, y u
             map.readshapefile('../../shapes/Estados', 'Mill')
             print('Generando mapa del dia {} ...'.format(cincodias[i-1]))
             plt.title('Pronostico de ROYA \n del {}'.format(cincodias[i-1]))
+            plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @ INIFAP', fontsize = 15 ,color='green')
             plt.savefig('Pronostico_de_ROYA_del_{}.png'.format(cincodias[i-1]), dpi=300)
         if (i == 6):
             roya = df.loc[df['indice']>1]
@@ -136,6 +137,7 @@ def gen_mapas(df, fecha, cincodias): #Genera 5 mapas de cada respectivo dia, y u
             map.readshapefile('../../shapes/Estados', 'Mill')
             print('\nGenerando mapa del pronostico del {} al {} ...'.format(cincodias[0], cincodias[4]))
             plt.title('Pronostico de ROYA del {} al {}'.format(cincodias[0], cincodias[4]))
+            plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @ INIFAP', fontsize = 15 ,color='green')
             plt.savefig('Pronostico_de_ROYA_del_{}_al_{}.png'.format(cincodias[0], cincodias[4]), dpi=300)
         plt.clf()
     os.chdir('../..') #Sale de la carpeta con la fecha/datos al directorio raiz
