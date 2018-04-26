@@ -138,7 +138,8 @@ def gen_mapas(df, fecha, cincodias):
             plt.title('Pronostico de ROYA \n del {}'.format(cincodias[i-1]))
             plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @ INIFAP', fontsize = 15 ,color='green')
             plt.savefig('Pronostico_de_ROYA_del_{}.png'.format(cincodias[i-1]), dpi=300)
-        if (i == 6): """Generación de un mapa genérico en base al índice del DataFrame"""
+        if (i == 6): 
+            """Generación de un mapa genérico en base al índice del DataFrame"""
             roya = df.loc[df['indice']>1]
             x, y = map(np.array(roya['Long']), np.array(roya['Lat'])) 
             numCols = len(x)
