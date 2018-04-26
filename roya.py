@@ -9,7 +9,7 @@ import ftplib #Librería utilizada para conectarse a un servidor FTP
 import os #Librería utilizada para crear carpetas de almacenamiento
 
 rangos = ('00011', '00110', '01100', '11000', '00111', '01110', '11100', '01111', '11110', '11111') #Lista de rangos
-rado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) #Lista de grados asociados a los rangos
+grado = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) #Lista de grados asociados a los rangos
 var = ('Tpro','Dpoint','Tmax','Tmin') #Lista de variables a utilizar
 
 def main():
