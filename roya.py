@@ -111,7 +111,7 @@ def data_frame(fecha):
     for i in range (1,6): 
         """Ciclo para generar cinco columnas una para cada dia, usando la funcion de validacion del modelo"""
         df['d{}'.format(i)] = df.apply(lambda x:modelo(x['{}{}'.format(var[0],i)],x['{}{}'.format(var[1],i)],x['{}{}'.format(var[2],i)],x['{}{}'.format(var[3],i)]),axis=1)
-    f['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1) 
+    df['indice'] = df.apply(lambda x:indice(x['d1'],x['d2'],x['d3'],x['d4'],x['d5']),axis=1) 
     """Generación de un índice en base a las 5 columnas para determinar la constante frecuencia de la roya"""
     print ('DataFrame generado.\n')
     return df 
