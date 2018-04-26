@@ -12,7 +12,7 @@ def main(): #Contiene las funciones que se ejecutarán
     cve = claves()
     fecha = obt_fecha(cve)
     cincodias = cinco_dias(fecha)
-    #desc_docs(fecha,cve)
+    desc_docs(fecha,cve)
     mapa_tot(fecha,cincodias)
 
 def obt_fecha(cve): #Obtiene la fecha desde el FTP del Instituto
@@ -151,7 +151,7 @@ def mapa_tot(fecha, cincodias):
             map.readshapefile('../../shapes/Estados', 'Mill')
             print('Generando mapa de Pronostico del: {} al {}'.format(cincodias[0],cincodias[-1]))
             plt.text(x =1.0536e+06, y =1.33233e+06, s = u' @2018 INIFAP', fontsize = 15 ,color='green')
-            plt.title('Pronostico de ROYA General a 5 dias \n del: {} al {}'.format(cincodias[0],cincodias[-1]))
+            plt.title('Índice de probabilidad de presencia de ROYA a 5 dias \n del: {} al {}'.format(cincodias[0],cincodias[-1]))
             plt.savefig('d{}.png'.format(i), dpi=300)
         plt.clf()
 
