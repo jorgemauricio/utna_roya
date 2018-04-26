@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from api import claves
 import pandas as pd 
 import numpy as np
-import shapefile 
+import shapefile
 import ftplib 
 import time
 import sys
@@ -264,15 +264,22 @@ class Mapas:
 				plt.title('Pronostico de ROYA General a 5 dias \n del: {} al {}'.format(FehasArreglo[0], FehasArreglo[-1]))
 				plt.savefig('d{}.png'.format(i), dpi=300)
 			plt.clf()
+		os.chdir('../..')
 
 if __name__ == "__main__":
 	#fecha = Fecha().obtencionFecha()
-	fecha = "2017-12-30"
-	FehasArreglo = ArregloFecha().fechas(fecha)
-	print('\nEl proceso de descarga de archivo a empezado')
-	print('Espera algunos minutos para que el proceso llegue a finalizar...')
-	#DescargarArchivos().descDocs(fecha)
-	print("*"*40)
-	#Menu().run()
-	df = DataFrame().BaseDataFrame(fecha)
-	Mapas().GenerarMapas(df,fecha,FehasArreglo)
+	num = 0
+	while num != 2:
+		Lisfechas = ["2018-04-21","2018-04-23"]
+		fecha = Lisfechas[num]
+		FehasArreglo = ArregloFecha().fechas(fecha)
+		print('\nEl proceso de descarga de archivo a empezado')
+		print('Espera algunos minutos para que el proceso llegue a finalizar...')
+		DescargarArchivos().descDocs(fecha)
+		print("*"*40)
+		#Menu().run()
+		df = DataFrame().BaseDataFrame(fecha)
+		Mapas().GenerarMapas(df,fecha,FehasArreglo)
+		num += 1
+		if num < 2:
+			time.sleep(300)
