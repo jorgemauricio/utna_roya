@@ -267,19 +267,12 @@ class Mapas:
 		os.chdir('../..')
 
 if __name__ == "__main__":
-	#fecha = Fecha().obtencionFecha()
-	num = 0
-	while num != 2:
-		Lisfechas = ["2018-04-21","2018-04-23"]
-		fecha = Lisfechas[num]
-		FehasArreglo = ArregloFecha().fechas(fecha)
-		print('\nEl proceso de descarga de archivo a empezado')
-		print('Espera algunos minutos para que el proceso llegue a finalizar...')
-		DescargarArchivos().descDocs(fecha)
-		print("*"*40)
-		#Menu().run()
-		df = DataFrame().BaseDataFrame(fecha)
-		Mapas().GenerarMapas(df,fecha,FehasArreglo)
-		num += 1
-		if num < 2:
-			time.sleep(300)
+	fecha = Fecha().obtencionFecha()
+	FehasArreglo = ArregloFecha().fechas(fecha)
+	print('\nEl proceso de descarga de archivo a empezado')
+	print('Espera algunos minutos para que el proceso llegue a finalizar...')
+	DescargarArchivos().descDocs(fecha)
+	print("*"*40)
+	Menu().run()
+	df = DataFrame().BaseDataFrame(fecha)
+	Mapas().GenerarMapas(df,fecha,FehasArreglo)
